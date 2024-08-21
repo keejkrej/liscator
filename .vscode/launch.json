@@ -9,12 +9,15 @@
             "type": "debugpy",
             "request": "launch",
             "module": "flask",
+            "pythonPath": "/opt/anaconda3/envs/fsk_py/bin/python",
             "env": {
                 "FLASK_APP": "app.py",
                 "FLASK_DEBUG": "1"
             },
             "args": [
                 "run",
+                "--port",
+                "8000",
                 "--no-debugger",
                 "--no-reload"
             ],
