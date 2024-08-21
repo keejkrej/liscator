@@ -1,0 +1,90 @@
+{% extends "layout.html" %}
+{% block styles %}
+<title>Cell Viewer</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        /* align-items: center; */
+        justify-content: center;
+        height: 100vh;
+        background-color: #ffffff;
+    }
+
+    .container {
+        text-align: center;
+    }
+
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+
+    .controls {
+        margin-top: 20px;
+    }
+
+    .control-group {
+        margin-bottom: 15px;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    input[type="range"] {
+        width: 100%;
+    }
+
+    select {
+        width: 100%;
+        padding: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+
+<body>
+    <div class="container">
+        <h1>Cell Viewer</h1>
+        <img id="channel_image" src="data:image/jpeg;base64,{{ channel_image }}">
+        <div class="controls">
+            <!-- Sliders -->
+            <div class="control-group">
+                <label for="slider1">Slider 1</label>
+                <input type="range" id="slider1" name="slider1" min="0" max="100" value="50">
+            </div>
+            <div class="control-group">
+                <label for="slider2">Slider 2</label>
+                <input type="range" id="slider2" name="slider2" min="0" max="100" value="50">
+            </div>
+            <!-- Dropdown Menus -->
+            <div class="control-group">
+                <label for="dropdown1">Dropdown 1</label>
+                <select id="dropdown1" name="dropdown1">
+                    <option value="option1">Option 1</option>
+                    <option value="option2">Option 2</option>
+                    <option value="option3">Option 3</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="dropdown2">Dropdown 2</label>
+                <select id="dropdown2" name="dropdown2">
+                    <option value="option1">Option 1</option>
+                    <option value="option2">Option 2</option>
+                    <option value="option3">Option 3</option>
+                </select>
+            </div>
+            <!-- Button -->
+            <button onclick="alert('Button clicked!')">Click Me</button>
+        </div>
+    </div>
+</body>
+{% endblock %}
+
+</html>

@@ -7,10 +7,17 @@ app = Flask(__name__)
 # Initialize the global variable at the module level
 cell_viewer = None
 
+@app.route('/test')
+def test():
+    return 'test'
+
 @app.route('/')
 def index():
     nd2_paths = load_paths('nd2_paths.txt')
     out_paths = load_paths('out_paths.txt')
+    if not nd2_paths or not out_paths:
+        # Handle the error appropriately, e.g., return an error message or redirect
+        return "Error: Missing file paths", 400
     return render_template('index.html', nd2_paths=nd2_paths, out_paths=out_paths)
 
 @app.route('/select_paths', methods=['POST'])
@@ -41,18 +48,21 @@ def set_paths():
     cell_viewer = CellViewer(nd2_path=nd2_path, output_path=out_path)
     return redirect(url_for('view'))
 
-@app.route('/view')
+@app.route('/view', methods=['GET', 'POST'])
 def view():
-    return ('test')
+    # return ('test')
     global cell_viewer
-    if cell_viewer is None:
-        cell_viewer = CellViewer(nd2_path='path/to/nd2', output_path='path/to/output')
+    # if cell_viewer is None:
+    #     cell_viewer = CellViewer(nd2_path='path/to/nd2', output_path='path/to/output')
     
-    # Example of changing an attribute
-    cell_viewer.set_position('new_position')
+    # # Example of changing an attribute
+    # cell_viewer.set_position('new_position')
     
-    data = cell_viewer.render_image()  # Replace with actual method
-    return render_template('view.html', data=data) #, channel_image=img, num_channels=3)
+    # data = cell_viewer.render_image()  # Replace with actual method
+    # return('test')
+    cell_viewer.position= ['XY00', 'XY01', 'XY02']
+    cell_viewer.position_changed()
+    return render_template('view.html', channel_image=cell_viewer.return_image())#, data=data) #, channel_image=img, num_channels=3)
 
 def load_paths(file_path):
     with open(file_path, mode='r') as file:

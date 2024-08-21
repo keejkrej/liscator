@@ -7,12 +7,22 @@ import pandas as pd
 import bqplot.pyplot as bqplt
 from nd2reader import ND2Reader
 
-# import ipywidgets as widgets
-# from ipyevents import Event
+from io import BytesIO
+import base64
+from PIL import Image
 
 import pathlib
 import warnings
 warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
+
+def numpy_to_b64_string(image):
+    rawBytes = BytesIO()
+    im = Image.fromarray(image)
+    im.save(rawBytes, format="JPEG")
+    rawBytes.seek(0)
+    image = base64.b64encode(rawBytes.getvalue())
+    img_str = image.decode('utf-8')
+    return img_str
 
 class CellViewer:
     
@@ -54,6 +64,33 @@ class CellViewer:
         
         self.image_size = 400
         self.outline_kernel = np.array([[0,0,1,0,0],[0,1,1,1,0],[1,1,0,1,1],[0,1,1,1,0],[0,0,1,0,0]])
+
+        # Replacing widgets from the show() method:
+
+        self.brightness_figure = {'title': 'Brightness', 'type': 'figure'}
+        self.brightness_lines = {'type': 'plot', 'data': ([], [])}
+        self.brightness_cursor_line = {'type': 'vline', 'position': 0, 'colors': [self.COLOR_RED]}
+        
+        self.area_figure = {'title': 'Area', 'type': 'figure'}
+        self.area_lines = {'type': 'plot', 'data': ([], [])}
+        self.area_cursor_line = {'type': 'vline', 'position': 0, 'colors': [self.COLOR_RED]}
+        
+        controls_widgets = []
+        
+        position_options = []
+        for pos in self.positions:
+            position_options.append((str(pos[0]), pos))
+        
+        # Replacing widgets.Dropdown, widgets.IntSlider, and widgets.Checkbox with dictionaries
+        self.position_dropdown = {'type': 'Dropdown', 'description': 'Position:', 'options': position_options}
+        self.max_value_slider = {'type': 'IntSlider', 'min': 0, 'max': np.iinfo(np.uint16).max, 'description': 'Max Pixel Value (Contrast)', 'value': self.max_pixel_value}
+        self.frame_slider = {'type': 'IntSlider', 'description': 'Frame', 'value': self.frame}
+        self.channel_slider = {'type': 'IntSlider', 'min': self.channel_min, 'max': self.channel_max, 'description': 'Channel', 'value': self.channel}
+        self.particle_dropdown = {'type': 'Dropdown'}
+        self.enabled_checkbox = {'type': 'Checkbox', 'description': 'Cell Enabled', 'value': False}
+        
+        self.area_figure['layout'] = {'height': '50%'}
+        self.brightness_figure['layout'] = {'height': '50%'}
         
     def get_positions(self):
         self.positions = []
@@ -143,6 +180,14 @@ class CellViewer:
         self.frame_min = self.file.attrs['frame_min']
         self.frame_max = self.file.attrs['frame_max']
         self.frame = self.frame_min
+
+        self.brightness_figure = bqplt.figure(title='Brightness')
+        self.brightness_lines = bqplt.plot([],[])
+        self.brightness_cursor_line = bqplt.vline(0, colors=[self.COLOR_RED])
+        
+        self.area_figure = bqplt.figure(title='Area')
+        self.area_lines = bqplt.plot([],[])
+        self.area_cursor_line = bqplt.vline(0, colors=[self.COLOR_RED])
         
         self.brightness_figure.title = self.file.attrs['fl_channel_names'][0]
         
@@ -190,23 +235,23 @@ class CellViewer:
         dropdown_options = []
         for particle in self.all_particles:
             dropdown_options.append((str(particle), particle))
-        self.particle_dropdown.options = dropdown_options
-        self.particle_dropdown.description = 'Cell (' + str(len(self.all_particles)) + '): '
+        self.particle_dropdown['options'] = dropdown_options
+        self.particle_dropdown['description'] = 'Cell (' + str(len(self.all_particles)) + '): '
         
         # Stop slider from updating on every change & edit slider values
-        self.frame_change_suppress = True
-        if self.frame_min > self.frame_slider.max:
-            self.frame_slider.max = self.frame_max
-            self.frame_slider.min = self.frame_min
-        else:
-            self.frame_slider.min = self.frame_min
-            self.frame_slider.max = self.frame_max
-        self.frame_slider.value = self.frame
-        self.frame_change_suppress = False
+        # self.frame_change_suppress = True
+        # if self.frame_min > self.frame_slider.max:
+        #     self.frame_slider.max = self.frame_max
+        #     self.frame_slider.min = self.frame_min
+        # else:
+        #     self.frame_slider.min = self.frame_min
+        #     self.frame_slider.max = self.frame_max
+        # self.frame_slider.value = self.frame
+        # self.frame_change_suppress = False
         
         # Will be called if position actually changed (not initial)
         if self.particle is None:
-            self.particle = self.particle_dropdown.value
+            self.particle = self.particle_dropdown['options'][0][1]
             self.particle_changed()
             #self.update_cursors()
         else:
@@ -228,7 +273,7 @@ class CellViewer:
         
         # set both so no update to file is applied
         self.particle_enabled = enabled
-        self.enabled_checkbox.value = enabled
+        self.enabled_checkbox['value'] = enabled
         
         self.update_plots()
             
@@ -310,7 +355,9 @@ class CellViewer:
         return img
     
     def get_channel_image(self):
-        img = self.nd2.get_frame_2D(v=self.position[0],c=self.channel,t=self.frame)[self.x:self.x+2*self.image_size,self.y:self.y+2*self.image_size]
+        # img = self.nd2.get_frame_2D(v=self.position[0],c=self.channel,t=self.frame)[self.x:self.x+2*self.image_size,self.y:self.y+2*self.image_size]
+        img = self.nd2.get_frame_2D(v=0,c=self.channel,t=self.frame)[self.x:self.x+2*self.image_size,self.y:self.y+2*self.image_size]
+
         pixel_val = self.max_pixel_value
         if self.channel == 0:
             pixel_val = 40000
@@ -320,7 +367,13 @@ class CellViewer:
     def update_image(self):
         img = self.combine_images(self.outline_image,self.channel_image,self.outline_mask)
         _, img_enc = cv2.imencode('.jpg', img)
-        self.image.value = img_enc.tobytes()
+        # self.image.value = img_enc.tobytes()
+
+    def return_image(self):
+        img = self.combine_images(self.outline_image,self.channel_image,self.outline_mask)
+        return numpy_to_b64_string(img)
+        # _, img_enc = cv2.imencode('.jpg', img)
+        # self.image.value = img_enc.tobytes()
         
     def get_outline(self, img):
         f64_img = img.astype(np.float64)
