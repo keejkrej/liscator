@@ -1,0 +1,3 @@
+nd2_path,out_path
+smb://z-sv-dfsroot.ad.physik.uni-muenchen.de/dfsroot/project/ag-moonraedler/projects/FlowCellProject/230505_TF73_HuH7_crop.nd2,smb://z-sv-dfsroot.ad.physik.uni-muenchen.de/dfsroot/project/ag-moonraedler/projects/FlowCellProject/PyamaSimon/
+/path/to/nd2/file2,/path/to/output/file2

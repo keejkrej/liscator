@@ -1,0 +1,2 @@
+/Volumes/FlowCellProject/PyamaSimon/
+/path/to/output/file2

@@ -1,0 +1,2 @@
+/Volumes/FlowCellProject/230505_TF73_HuH7_crop.nd2
+/path/to/nd2/file2
