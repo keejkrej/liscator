@@ -50,19 +50,21 @@ def select_paths():
 
 @app.route('/view', methods=['GET', 'POST'])
 def view():
-    # return ('test')
     global cell_viewer
-    # if cell_viewer is None:
-    #     cell_viewer = CellViewer(nd2_path='path/to/nd2', output_path='path/to/output')
-    
-    # # Example of changing an attribute
-    # cell_viewer.set_position('new_position')
-    
-    # data = cell_viewer.render_image()  # Replace with actual method
-    # return('test')
-    # cell_viewer.position= ['XY00', 'XY01', 'XY02']
+
     cell_viewer.position_changed()
-    return render_template('view.html', channel_image=cell_viewer.return_image())#, data=data) #, channel_image=img, num_channels=3)
+    return render_template('view.html', channel_image=cell_viewer.return_image(), n_positions=len(cell_viewer.positions))#, data=data) #, channel_image=img, num_channels=3)
+
+@app.route('/update_image', methods=['POST'])
+def update_image():
+    global cell_viewer
+    # cell_viewer.position_changed()
+    new_position = int(request.form['position'])
+
+    cell_viewer.position = cell_viewer.position_options[new_position]
+    # cell_viewer.channel = new_position
+    cell_viewer.get_channel_image()
+    return jsonify({'channel_image': cell_viewer.return_image()})
 
 def load_paths(file_path):
     with open(file_path, mode='r') as file:

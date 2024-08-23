@@ -56,8 +56,8 @@
         <div class="controls">
             <!-- Sliders -->
             <div class="control-group">
-                <label for="slider1">Slider 1</label>
-                <input type="range" id="slider1" name="slider1" min="0" max="100" value="50">
+                <label for="position_slider">Position: </label>
+                <input type="range" id="position_slider" name="position_slider" min="0" max="{{ n_positions - 1 }}" value="0">
             </div>
             <div class="control-group">
                 <label for="slider2">Slider 2</label>
@@ -85,6 +85,9 @@
         </div>
     </div>
 </body>
+<script src="{{ url_for('static', filename='ui.js') }}"></script>
+<script src="{{ url_for('static', filename='api.js') }}"></script>
+
 {% endblock %}
 
 </html>
