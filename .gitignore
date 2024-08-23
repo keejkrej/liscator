@@ -1,4 +1,6 @@
 memory/logs
+.vscode/launch.json
+.vscode/settings.json
 
 
 # Byte-compiled / optimized / DLL files
