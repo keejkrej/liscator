@@ -40,13 +40,13 @@ def select_paths():
 
 #     return render_template('index.html')#, channel_image=img, num_channels=3)
 
-@app.route('/set_paths', methods=['POST'])
-def set_paths():
-    global cell_viewer
-    nd2_path = request.files.getlist('nd2_path')[0].filename
-    out_path = request.files.getlist('out_path')[0].filename
-    cell_viewer = CellViewer(nd2_path=nd2_path, output_path=out_path)
-    return redirect(url_for('view'))
+# @app.route('/set_paths', methods=['POST'])
+# def set_paths():
+#     global cell_viewer
+#     nd2_path = request.files.getlist('nd2_path')[0].filename
+#     out_path = request.files.getlist('out_path')[0].filename
+#     cell_viewer = CellViewer(nd2_path=nd2_path, output_path=out_path)
+#     return redirect(url_for('view'))
 
 @app.route('/view', methods=['GET', 'POST'])
 def view():
@@ -60,7 +60,7 @@ def view():
     
     # data = cell_viewer.render_image()  # Replace with actual method
     # return('test')
-    cell_viewer.position= ['XY00', 'XY01', 'XY02']
+    # cell_viewer.position= ['XY00', 'XY01', 'XY02']
     cell_viewer.position_changed()
     return render_template('view.html', channel_image=cell_viewer.return_image())#, data=data) #, channel_image=img, num_channels=3)
 

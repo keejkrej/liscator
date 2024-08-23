@@ -77,12 +77,17 @@ class CellViewer:
         
         controls_widgets = []
         
-        position_options = []
+        self.position_options = []
         for pos in self.positions:
-            position_options.append((str(pos[0]), pos))
+            self.position_options.append((str(pos[0]), pos))
+        # Example: if self.positions is [(0, 'XY00'), (1, 'XY01')]
+        # then position_options = [('0', (0, 'XY00')), ('1', (1, 'XY01'))]
+        # position_options is a list of tuples, where the first element is a string and the second element is a tuple
+
+        self.position = self.position_options[0]
         
         # Replacing widgets.Dropdown, widgets.IntSlider, and widgets.Checkbox with dictionaries
-        self.position_dropdown = {'type': 'Dropdown', 'description': 'Position:', 'options': position_options}
+        self.position_dropdown = {'type': 'Dropdown', 'description': 'Position:', 'options': self.position_options}
         self.max_value_slider = {'type': 'IntSlider', 'min': 0, 'max': np.iinfo(np.uint16).max, 'description': 'Max Pixel Value (Contrast)', 'value': self.max_pixel_value}
         self.frame_slider = {'type': 'IntSlider', 'description': 'Frame', 'value': self.frame}
         self.channel_slider = {'type': 'IntSlider', 'min': self.channel_min, 'max': self.channel_max, 'description': 'Channel', 'value': self.channel}
@@ -93,6 +98,7 @@ class CellViewer:
         self.brightness_figure['layout'] = {'height': '50%'}
         
     def get_positions(self):
+        # Will only get positions that have the necessary files (data.h5, features.csv, tracks.csv)
         self.positions = []
         folders = self.get_subdirs(self.output_path)
         for folder in folders:
@@ -108,6 +114,7 @@ class CellViewer:
             if not 'tracks.csv' in pos_files:
                 continue
             #print(pos_files)
+            # Create tuple with position number and folder name
             pos = (int(match.group(1)), folder)
             self.positions.append(pos)
             
@@ -173,7 +180,7 @@ class CellViewer:
             
             
     def position_changed(self):
-        self.data_dir = os.path.join(self.output_path,self.position[1])
+        self.data_dir = os.path.join(self.output_path,self.position[1][1])
         if self.file is not None:
             self.file.close()
         self.file = h5py.File(os.path.join(self.data_dir,'data.h5'), "r")
@@ -355,8 +362,8 @@ class CellViewer:
         return img
     
     def get_channel_image(self):
-        # img = self.nd2.get_frame_2D(v=self.position[0],c=self.channel,t=self.frame)[self.x:self.x+2*self.image_size,self.y:self.y+2*self.image_size]
-        img = self.nd2.get_frame_2D(v=0,c=self.channel,t=self.frame)[self.x:self.x+2*self.image_size,self.y:self.y+2*self.image_size]
+        img = self.nd2.get_frame_2D(v=int(self.position[1][0]),c=self.channel,t=self.frame)[self.x:self.x+2*self.image_size,self.y:self.y+2*self.image_size]
+        # img = self.nd2.get_frame_2D(v=0,c=self.channel,t=self.frame)[self.x:self.x+2*self.image_size,self.y:self.y+2*self.image_size]
 
         pixel_val = self.max_pixel_value
         if self.channel == 0:
@@ -511,6 +518,10 @@ class CellViewer:
         position_options = []
         for pos in self.positions:
             position_options.append((str(pos[0]), pos))
+            # Example: if self.positions is [(0, 'XY00'), (1, 'XY01')]
+            # then position_options = [('0', (0, 'XY00')), ('1', (1, 'XY01'))]
+            # position_options is a list of tuples, where the first element is a string and the second element is a tuple
+
         
         self.position_dropdown = widgets.Dropdown(description='Position:')
         self.max_value_slider = widgets.IntSlider(min=0, max=np.iinfo(np.uint16).max, description='Max Pixel Value (Contrast)', value=self.max_pixel_value)
