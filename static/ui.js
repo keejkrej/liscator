@@ -1,6 +1,6 @@
 // Get the sliders
 const positionSlider = document.getElementById("position_slider");
-const slider2 = document.getElementById("slider2");
+const ChannelSlider = document.getElementById("channel_slider");
 // Get the dropdown menus
 const dropdown1 = document.getElementById("dropdown1");
 const dropdown2 = document.getElementById("dropdown2");
@@ -8,8 +8,8 @@ const dropdown2 = document.getElementById("dropdown2");
 positionSlider.addEventListener("input", function () {
     console.log("Position: ", positionSlider.value);
 });
-slider2.addEventListener("input", function () {
-    console.log("Slider 2: ", slider2.value);
+ChannelSlider.addEventListener("input", function () {
+    console.log("Channel: ", ChannelSlider.value);
 });
 dropdown1.addEventListener("change", function () {
     console.log("Dropdown 1: ", dropdown1.value);

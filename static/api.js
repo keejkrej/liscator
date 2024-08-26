@@ -1,9 +1,10 @@
 positionSlider.addEventListener('input', updateImage);
+ChannelSlider.addEventListener('input', updateImage); 
 
 function updateImage() {
     const params = {
         position: document.getElementById('position_slider').value,
-        // channel: document.getElementById('channel_slider').value,
+        channel: document.getElementById('channel_slider').value,
         // contrast: contrast.noUiSlider.get(),
         // overlay: document.getElementById('overlay').checked,
         // overlay_contrast: overlay_slider.noUiSlider.get()
