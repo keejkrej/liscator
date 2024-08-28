@@ -53,7 +53,7 @@ def view():
     global cell_viewer
 
     cell_viewer.position_changed()
-    return render_template('view.html', channel_image=cell_viewer.return_image(), n_positions=len(cell_viewer.positions), num_channels=cell_viewer.channel_max)#, data=data) #, channel_image=img)
+    return render_template('view.html', channel_image=cell_viewer.return_image(), n_positions=len(cell_viewer.positions), num_channels=cell_viewer.channel_max, n_frames=cell_viewer.frame_max)#, data=data) #, channel_image=img)
 
 @app.route('/update_image', methods=['POST'])
 def update_image():

@@ -58,10 +58,17 @@
             <div class="control-group">
                 <label for="position_slider">Position: </label>
                 <input type="range" id="position_slider" name="position_slider" min="0" max="{{ n_positions - 1 }}" value="0">
+                <span id="position_value">0</span>
             </div>
             <div class="control-group">
-                <label for="channel_slider">Channels</label>
+                <label for="channel_slider">Channel:</label>
                 <input type="range" id="channel_slider" name="channel_slider" min="0" max="{{num_channels}}" value="0">
+                <span id="channel_value">0</span>
+            </div>
+            <div class="control-group">
+                <label for="timeframe_slider">Frame:</label>
+                <input type="range" id="timeframe_slider" name="timeframe_slider" min="0" max="{{n_frames}}" value="0">
+                <span id="timeframe_value" style="width: 50px; display: inline-block; text-align: center;"></span>
             </div>
             <!-- Dropdown Menus -->
             <div class="control-group">

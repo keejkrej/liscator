@@ -9,7 +9,7 @@
             "type": "debugpy",
             "request": "launch",
             "module": "flask",
-            "pythonPath": "/opt/anaconda3/envs/fsk_py/bin/python",
+            "python.defaultInterpreterPath": "/Users/alexanderzangl/anaconda3/envs/local_SimonsPyama/bin/python",
             "env": {
                 "FLASK_APP": "app.py",
                 "FLASK_DEBUG": "1"
