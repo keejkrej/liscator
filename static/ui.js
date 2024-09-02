@@ -5,8 +5,8 @@ const ChannelSlider = document.getElementById("channel_slider");
 document.addEventListener('DOMContentLoaded', (event) => {
     let channel = document.getElementById("channel_slider");
     let channelValue = document.getElementById("channel_value");
-
-    channel.addEventListener('input', function () {
+    
+        channel.addEventListener('input', function () {
         channelValue.innerHTML = channel.value;
     });
 });
