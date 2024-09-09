@@ -55,6 +55,11 @@ def view():
     cell_viewer.position_changed()
     return render_template('view.html', channel_image=cell_viewer.return_image(), n_positions=len(cell_viewer.positions), n_channels=cell_viewer.channel_max, n_frames=cell_viewer.frame_max)#, data=data) #, channel_image=img)
 
+@app.route('/preprocess', methods=['GET', 'POST'])
+def precossing():
+    global cell_viewer
+    return render_template('preprocess.html')
+
 @app.route('/update_image', methods=['POST'])
 def update_image():
     global cell_viewer
