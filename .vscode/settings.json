@@ -1,6 +1,0 @@
-{
-  "terminal.integrated.env.osx": {
-    "CONDA_DEFAULT_ENV": "your_env_name",
-    "python.pythonPath": "/opt/anaconda3/envs/fsk_py/bin/python"
-  }
-}
