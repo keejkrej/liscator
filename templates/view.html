@@ -99,6 +99,11 @@
                 <input type="range" id="timeframe_slider" name="timeframe_slider" min="0" max="{{n_frames}}" value="0">
                 <span id="timeframe_value">0</span>
             </div>
+            <div class="control-group">
+                <label for="particle_slider">Particle: </label>
+                <input type="range" id="particle_slider" name="particle_slider" min="0" max="{{ all_particles_len - 1 }}" value="{{ current_particle_index }}">
+                <span id="particle_value">{{ current_particle_index }}</span>
+            </div>
             <!-- Dropdown Menus -->
             <div class="control-group">
                 <label for="dropdown1">Dropdown 1</label>

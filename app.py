@@ -32,11 +32,14 @@ class App:
             if self.cell_viewer is None:
                 return redirect(url_for('index'))
             self.cell_viewer.position_changed()
+            current_particle_index = self.cell_viewer.all_particles.index(self.cell_viewer.particle)
             return render_template('view.html',
                                    channel_image=self.cell_viewer.return_image(),
                                    n_positions=len(self.cell_viewer.positions),
                                    n_channels=self.cell_viewer.channel_max,
-                                   n_frames=self.cell_viewer.frame_max)
+                                   n_frames=self.cell_viewer.frame_max,
+                                   all_particles_len=self.cell_viewer.all_particles_len,
+                                   current_particle_index=current_particle_index)
 
         @self.app.route('/preprocess', methods=['GET', 'POST'])
         def processing():
@@ -47,11 +50,21 @@ class App:
             new_position = int(request.form['position'])
             new_channel = int(request.form['channel'])
             new_frame = int(request.form['frame'])
+            new_particle = int(request.form['particle'])
+
+            if new_position != self.cell_viewer.position:
+                self.cell_viewer.position = self.cell_viewer.position_options[new_position]
+                self.cell_viewer.position_changed()
+
+            if new_particle != self.cell_viewer.particle:
+                self.cell_viewer.particle = self.cell_viewer.all_particles[new_particle]
+                self.cell_viewer.particle_changed()
 
             self.cell_viewer.channel = new_channel
-            self.cell_viewer.position = self.cell_viewer.position_options[new_position]
             self.cell_viewer.frame = new_frame
+
             self.cell_viewer.get_channel_image()
+            self.cell_viewer.draw_outlines()
             return jsonify({'channel_image': self.cell_viewer.return_image()})
 
     def load_paths(self, file_path):
