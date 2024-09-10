@@ -25,10 +25,20 @@
 
     .controls {
         margin-top: 20px;
+        max-width: 300px;
+        width: auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding-left: 10px;
     }
 
     .control-group {
         margin-bottom: 15px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
     }
 
     label {
@@ -44,6 +54,25 @@
         width: 100%;
         padding: 5px;
     }
+
+    .button-group {
+        display: flex;
+        flex-direction: column;
+        width: 90vw;
+        max-width: inherit;
+    }
+    .button {
+        flex-grow: 1;
+        justify-content: center;
+        text-align: center;
+        /* width: auto; previous value: 10vw */
+        background-color: rgb(227, 98, 98);
+        margin: 3px;
+        padding: 10px;
+        /* width: 200px; */
+        max-width: inherit;
+    }
+
 </style>
 {% endblock %}
 
@@ -58,10 +87,17 @@
             <div class="control-group">
                 <label for="position_slider">Position: </label>
                 <input type="range" id="position_slider" name="position_slider" min="0" max="{{ n_positions - 1 }}" value="0">
+                <span id="position_value">0</span>
             </div>
             <div class="control-group">
-                <label for="channel_slider">Channels</label>
-                <input type="range" id="channel_slider" name="channel_slider" min="0" max="{{num_channels}}" value="0">
+                <label for="channel_slider">Channel:</label>
+                <input type="range" id="channel_slider" name="channel_slider" min="0" max="{{n_channels}}" value="0">
+                <span id="channel_value">0</span>
+            </div>
+            <div class="control-group">
+                <label for="timeframe_slider">Frame:</label>
+                <input type="range" id="timeframe_slider" name="timeframe_slider" min="0" max="{{n_frames}}" value="0">
+                <span id="timeframe_value">0</span>
             </div>
             <!-- Dropdown Menus -->
             <div class="control-group">
@@ -82,6 +118,13 @@
             </div>
             <!-- Button -->
             <button onclick="alert('Button clicked!')">Click Me</button>
+            <div class="button-group">
+                    <button class="button">Do Segmentation</button>
+                    <button class="button" >Do Tracking</button>
+                    <button class="button">Do Segmentation for Position(s)</button>
+                    <button class="button">Output Directory</button>
+            </div>
+
         </div>
     </div>
 </body>
