@@ -62,8 +62,9 @@ class App:
     def run(self):
         self.app.run(host='0.0.0.0', port=8000, debug=True)
 
-app = App()
-app.routes()
+app_instance = App()
+app_instance.routes()
+flask_app = app_instance.app
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0',port=8000, debug=True)
