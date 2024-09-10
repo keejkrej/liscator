@@ -66,10 +66,13 @@ def update_image():
     # cell_viewer.position_changed()
     new_position = int(request.form['position'])
     new_channel = int(request.form['channel'])
+    new_frame = int(request.form['frame'])
 
     cell_viewer.channel = new_channel
     cell_viewer.position = cell_viewer.position_options[new_position]
-    # cell_viewer.channel = new_position
+    cell_viewer.frame = new_frame
+    # print(f"cell_viewer.position: {cell_viewer.position}, channel: {cell_viewer.channel}, frame: {cell_viewer.frame}")
+    # print(f"type of cell_viewer.position: {type(cell_viewer.position)}, type of cell_viewer.channel: {type(cell_viewer.channel)}, type of cell_viewer.frame: {type(cell_viewer.frame)}")
     cell_viewer.get_channel_image()
     return jsonify({'channel_image': cell_viewer.return_image()})
 
@@ -80,4 +83,3 @@ def load_paths(file_path):
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0',port=8000, debug=True)
-
