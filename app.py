@@ -45,6 +45,23 @@ class App:
         def processing():
             return render_template('preprocess.html')
 
+        # Route for documentation
+        #
+        @self.app.route('/documentation', methods=['GET', 'POST'])
+        def documentation():
+            # Render documentation.html and parse the svg file
+
+            svg = "static/images/UserTutorial.svg"
+
+            # The body code in the HTML should look like this:
+                # <object type="image/svg+xml" data="{{ svg }}" width="100%" height="100%"></object>
+
+            return render_template('documentation.html', svg=svg)
+
+
+
+        # Update image based on user input
+
         @self.app.route('/update_image', methods=['POST'])
         def update_image():
             new_position = int(request.form['position'])
