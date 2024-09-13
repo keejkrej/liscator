@@ -366,7 +366,7 @@ class CellViewer:
         img = self.nd2.get_frame_2D(v=int(self.position[1][0]),c=self.channel,t=self.frame)[self.x:self.x+2*self.image_size,self.y:self.y+2*self.image_size]
 
         # There seems to be an issue with the arguments. Apparently v should be the position, but it's not working.
-        # Instead, v seems to be the input for the frame. 
+        # Instead, v seems to be the input for the frame.
 
         # img = self.nd2.get_frame_2D(v=0,c=self.channel,t=self.frame)[self.x:self.x+2*self.image_size,self.y:self.y+2*self.image_size]
 

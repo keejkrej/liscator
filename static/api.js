@@ -1,12 +1,14 @@
 positionSlider.addEventListener("input", updateImage);
 channelSlider.addEventListener("input", updateImage);
 timeframeSlider.addEventListener("input", updateImage);
+particleSlider.addEventListener("input", updateImage);
 
 function updateImage() {
   const params = {
     position: document.getElementById("position_slider").value,
     channel: document.getElementById("channel_slider").value,
     frame: document.getElementById("timeframe_slider").value,
+    particle: document.getElementById("particle_slider").value,
     // contrast: contrast.noUiSlider.get(),
     // overlay: document.getElementById('overlay').checked,
     // overlay_contrast: overlay_slider.noUiSlider.get()
