@@ -20,6 +20,7 @@ defusedxml==0.7.1
 exceptiongroup==1.2.2
 executing==2.0.1
 fastjsonschema==2.20.0
+Flask==3.0.3
 fonttools==4.34.4
 fqdn==1.5.1
 h11==0.14.0
@@ -30,7 +31,6 @@ idna==3.7
 imageio==2.21.0
 isoduration==20.11.0
 jedi==0.19.1
-Jinja2==3.1.4
 json5==0.9.25
 jsonpointer==3.0.0
 jsonschema==4.23.0
@@ -105,4 +105,8 @@ webencodings==0.5.1
 websocket-client==1.8.0
 XlsxWriter==3.0.3
 xmltodict==0.13.0
-Flask==3.0.3
+blinker==1.8.2
+click==8.1.7
+itsdangerous==2.2.0
+Jinja2==3.1.4
+Werkzeug==3.0.4
