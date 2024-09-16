@@ -1,6 +1,6 @@
-/Volumes/FlowCellProject/230505_TF73_HuH7_crop.nd2
-/Volumes/FlowCellProject/230505_TF73_HuH7_crop2.nd2
-/Volumes/ag-moonraedler/Judith/Students/Simon_Master/230505_TF73_HuH7.nd2
+/project/ag-moonraedler/projects/FlowCellProject/230505_TF73_HuH7_crop.nd2
+/project/ag-moonraedler/projects/FlowCellProject/230505_TF73_HuH7_crop2.nd2
+/project/ag-moonraedler/Judith/Students/Simon_Master/230505_TF73_HuH7.nd2
 /path/to/nd2/file2
 
 

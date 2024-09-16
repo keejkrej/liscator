@@ -1,2 +1,2 @@
-/Volumes/FlowCellProject/PyamaSimon/
+/project/ag-moonraedler/projects/FlowCellProject/PyamaSimon/
 /path/to/output/file2
