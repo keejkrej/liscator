@@ -1,9 +1,7 @@
 <!-- templates/index.html -->
-{% extends "layout.html" %}
-
-{% block body %}
+{% extends "layout.html" %} {% block body %}
 <div class="container">
-    <h1>Select Paths</h1>
+    <h1>Select Paths:</h1>
     <form action="/select_paths" method="post">
         <label for="nd2_paths">Choose an ND2 path:</label>
         <select name="nd2_paths" id="nd2_paths">
@@ -11,20 +9,20 @@
             <option value="{{ path }}">{{ path }}</option>
             {% endfor %}
         </select>
-        <br>
+        <br />
         <label for="out_paths">Choose an output path:</label>
         <select name="out_paths" id="out_paths">
             {% for path in out_paths %}
             <option value="{{ path }}">{{ path }}</option>
             {% endfor %}
         </select>
-        <br>
-        <input type="submit" value="Submit">
+        <br />
+        <input type="submit" value="Submit" />
     </form>
 </div>
 
 <script>
-    document.getElementById('nd2_paths').value = "{{ nd2_paths[0] }}";
-    document.getElementById('out_paths').value = "{{ out_paths[0] }}";
+    document.getElementById("nd2_paths").value = "{{ nd2_paths[0] }}";
+    document.getElementById("out_paths").value = "{{ out_paths[0] }}";
 </script>
 {% endblock %}
