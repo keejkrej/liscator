@@ -1,8 +1,9 @@
-positionSlider.addEventListener("input", updateImage);
-channelSlider.addEventListener("input", updateImage);
-timeframeSlider.addEventListener("input", updateImage);
-particleSlider.addEventListener("input", updateImage);
+positionSlider.addEventListener("input", updateImage, updatePositionText);
+channelSlider.addEventListener("input", updateImage, updateChannelText);
+timeframeSlider.addEventListener("input", updateImage, updateTimeframeText);
+particleSlider.addEventListener("input", updateImage, updateParticleText);
 
+// window.updateImage = function () {
 function updateImage() {
   const params = {
     position: document.getElementById("position_slider").value,
@@ -17,6 +18,25 @@ function updateImage() {
   };
 
   fetchImageUpdate("/update_image", params);
+}
+
+function updatePositionText() {
+  document.getElementById("position_value").textContent =
+    `${positionSlider.value}/${positionSlider.max}`;
+}
+function updateChannelText() {
+  document.getElementById("channel_value").textContent =
+    `${channelSlider.value}/${channelSlider.max}`;
+}
+
+function updateTimeframeText() {
+  document.getElementById("timeframe_value").textContent =
+    `${timeframeSlider.value}/${timeframeSlider.max}`;
+}
+
+function updateParticleText() {
+  document.getElementById("particle_value").textContent =
+    `${particleSlider.value}/${particleSlider.max}`;
 }
 
 function createRequestBody(params) {
