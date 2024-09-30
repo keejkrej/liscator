@@ -24,13 +24,17 @@ class App:
         def select_paths():
             nd2_path = request.form['nd2_paths']
             out_path = request.form['out_paths']
+            redirect_to = request.form['redirect_to']
 
             self.cell_viewer = CellViewer(nd2_path=nd2_path, output_path=out_path)
-
             self.cell_viewer.nd2_path = nd2_path
             self.cell_viewer.output_path = out_path
-
-            return redirect(url_for('view'))
+            if redirect_to == 'view':
+                return redirect(url_for('view'))
+            elif redirect_to == 'analysis':
+                return redirect(url_for('analysis'))
+            else:
+                return redirect(url_for('index'))
 
         @self.app.route('/view', methods=['GET', 'POST'])
         def view():
@@ -119,6 +123,15 @@ class App:
 
             pyama_util.square_roi(out_dir, positions, square_um_size)
             return jsonify({'status': 'success'})
+
+        @self.app.route('/analysis')
+        def analysis():
+            if self.cell_viewer is None:
+                return redirect(url_for('index'))
+            return render_template('analysis.html',
+                                   n_positions=len(self.cell_viewer.positions),
+                                   n_channels=self.cell_viewer.channel_max,
+                                   n_frames=self.cell_viewer.frame_max)
 
     def load_paths(self, file_path):
         with open(file_path, mode='r') as file:

@@ -21,6 +21,14 @@
             body {
                 font-family: Arial, sans-serif;
                 overflow-x: hidden;
+                transition:
+                    background-color 0.3s,
+                    color 0.3s;
+            }
+
+            body.dark-mode {
+                background-color: #121212;
+                color: #ffffff;
             }
 
             .container {
@@ -101,23 +109,29 @@
             }
 
             .sidebar-header {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                position: relative;
                 padding: 1rem;
             }
 
             .toggle-btn {
-                background: none;
+                position: absolute;
+                top: 10px;
+                right: -40px;
+                background: #343a40;
                 border: none;
                 color: #ffc107;
                 font-size: 1.5rem;
                 cursor: pointer;
-                position: absolute;
-                right: 10px;
+                padding: 5px 10px;
+                border-radius: 0 5px 5px 0;
                 transition: all 0.3s;
-                z-index: 1000;
+            }
+
+            .sidebar-container.collapsed .toggle-btn {
+                right: -40px;
+            }
+
+            .sidebar-container:not(.collapsed) .toggle-btn {
+                right: 10px;
             }
 
             .sidebar-container.collapsed
@@ -133,7 +147,6 @@
             }
 
             .sidebar-container.collapsed .toggle-btn {
-                right: 5px;
                 transform: rotate(180deg);
             }
 
@@ -148,6 +161,22 @@
 
             .sidebar-container:not(.collapsed) .menu-link {
                 pointer-events: auto;
+            }
+
+            .dark-mode-toggle {
+                background: none;
+                border: none;
+                color: #ffc107;
+                font-size: 1.2rem;
+                cursor: pointer;
+            }
+
+            body.dark-mode .sidebar-container {
+                background-color: #1e1e1e;
+            }
+
+            body.dark-mode .nav-link {
+                color: #ffffff;
             }
         </style>
     </head>
@@ -198,28 +227,34 @@
                     class="d-flex flex-column flex-shrink-0 p-3 text-bg-dark sidebar-content"
                 >
                     <div class="sidebar-header">
-                        <a
-                            href="/"
-                            class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none menu-link"
+                        <div
+                            class="d-flex justify-content-between align-items-center"
                         >
-                            <div class="logo-container">
-                                <svg
-                                    class="bi pe-none me-2"
-                                    width="40"
-                                    height="32"
-                                >
-                                    <use xlink:href="#bootstrap" />
-                                </svg>
-                            </div>
-                            <span class="fs-4 menu-text">Menu</span>
-                        </a>
-                        <button
-                            class="toggle-btn"
-                            id="toggleSidebar"
-                            title="Toggle Sidebar"
-                        >
-                            &#9776;
-                        </button>
+                            <a
+                                href="/"
+                                class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none menu-link"
+                            >
+                                <div class="logo-container">
+                                    <svg
+                                        class="bi pe-none me-2"
+                                        width="40"
+                                        height="32"
+                                    >
+                                        <use xlink:href="#bootstrap" />
+                                    </svg>
+                                </div>
+                                <span class="fs-4 menu-text">Menu</span>
+                            </a>
+                        </div>
+                        <div class="mt-2">
+                            <button
+                                class="dark-mode-toggle"
+                                id="darkModeToggle"
+                                title="Toggle Dark Mode"
+                            >
+                                🌓
+                            </button>
+                        </div>
                     </div>
                     <hr />
                     <ul
@@ -356,6 +391,13 @@
                         </ul>
                     </div>
                 </div>
+                <button
+                    class="toggle-btn"
+                    id="toggleSidebar"
+                    title="Toggle Sidebar"
+                >
+                    &#9776;
+                </button>
             </div>
 
             <div class="main-content" id="content">
@@ -367,6 +409,7 @@
             const sidebar = document.getElementById("sidebar");
             const mainContent = document.querySelector(".main-content");
             const toggleBtn = document.getElementById("toggleSidebar");
+            const darkModeToggle = document.getElementById("darkModeToggle");
 
             toggleBtn.addEventListener("click", function (event) {
                 event.preventDefault();
@@ -380,6 +423,19 @@
                     event.preventDefault();
                 }
             });
+
+            darkModeToggle.addEventListener("click", function () {
+                document.body.classList.toggle("dark-mode");
+                localStorage.setItem(
+                    "darkMode",
+                    document.body.classList.contains("dark-mode"),
+                );
+            });
+
+            // Check for saved dark mode preference
+            if (localStorage.getItem("darkMode") === "true") {
+                document.body.classList.add("dark-mode");
+            }
         </script>
     </body>
 </html>
