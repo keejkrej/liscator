@@ -2,7 +2,7 @@
 {% extends "layout.html" %} {% block body %}
 <div class="container">
     <h1>Select Paths:</h1>
-    <form action="/select_paths" method="post">
+    <form id="pathForm" action="/select_paths" method="post">
         <label for="nd2_paths">Choose an ND2 path:</label>
         <select name="nd2_paths" id="nd2_paths">
             {% for path in nd2_paths %}
@@ -17,12 +17,49 @@
             {% endfor %}
         </select>
         <br />
-        <input type="submit" value="Submit" />
+        <input type="hidden" name="redirect_to" id="redirect_to" value="view" />
+        <div class="button-container">
+            <button type="button" onclick="submitForm('view')" class="button">
+                View
+            </button>
+            <button
+                type="button"
+                onclick="submitForm('analysis')"
+                class="button"
+            >
+                Analysis
+            </button>
+        </div>
     </form>
 </div>
+
+<style>
+    .button-container {
+        margin-top: 20px;
+    }
+    .button {
+        display: inline-block;
+        padding: 10px 20px;
+        margin: 0 10px;
+        background-color: #4caf50;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        border: none;
+        cursor: pointer;
+    }
+    .button:hover {
+        background-color: #45a049;
+    }
+</style>
 
 <script>
     document.getElementById("nd2_paths").value = "{{ nd2_paths[0] }}";
     document.getElementById("out_paths").value = "{{ out_paths[0] }}";
+
+    function submitForm(destination) {
+        document.getElementById("redirect_to").value = destination;
+        document.getElementById("pathForm").submit();
+    }
 </script>
 {% endblock %}

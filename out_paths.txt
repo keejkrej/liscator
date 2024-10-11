@@ -1,2 +1,5 @@
-/Volumes/FlowCellProject/PyamaSimon/
+/project/ag-moonraedler/projects/FlowCellProject/PyamaSimon/
+/project/ag-moonraedler/projects/FlowCellProject/PyamaSimonBackup/
+/scratch/j/J.Mercado/PyamaSimonBackup/
+/scratch/j/J.Mercado/PyamaTest/
 /path/to/output/file2
