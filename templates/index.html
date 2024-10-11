@@ -1,65 +1,95 @@
-<!-- templates/index.html -->
 {% extends "layout.html" %} {% block body %}
-<div class="container">
-    <h1>Select Paths:</h1>
-    <form id="pathForm" action="/select_paths" method="post">
-        <label for="nd2_paths">Choose an ND2 path:</label>
-        <select name="nd2_paths" id="nd2_paths">
-            {% for path in nd2_paths %}
-            <option value="{{ path }}">{{ path }}</option>
-            {% endfor %}
-        </select>
-        <br />
-        <label for="out_paths">Choose an output path:</label>
-        <select name="out_paths" id="out_paths">
-            {% for path in out_paths %}
-            <option value="{{ path }}">{{ path }}</option>
-            {% endfor %}
-        </select>
-        <br />
-        <input type="hidden" name="redirect_to" id="redirect_to" value="view" />
-        <div class="button-container">
-            <button type="button" onclick="submitForm('view')" class="button">
-                View
-            </button>
-            <button
-                type="button"
-                onclick="submitForm('analysis')"
-                class="button"
-            >
-                Analysis
-            </button>
+<div class="container mx-auto p-4">
+    <div class="flex flex-row" style="display: flex">
+        <div class="w-5/12 pr-4">
+            <h2 class="text-xl font-semibold mb-2">ND2 File</h2>
+            <div class="flex mb-4">
+                <input
+                    id="nd2CurrentPath"
+                    type="text"
+                    class="flex-grow p-2 border rounded-l"
+                    value="/"
+                    readonly
+                />
+                <button id="nd2UpDir" class="button-secondary">Up</button>
+                <button
+                    id="nd2SelectFolder"
+                    class="button-primary rounded-r"
+                    style="display: none"
+                >
+                    Select Folder
+                </button>
+            </div>
+            <div id="nd2FileList" class="border p-4 h-48 overflow-y-auto"></div>
+            <p id="nd2SelectedItem" class="mt-2 text-gray-700"></p>
         </div>
-    </form>
+
+        <div class="w-5/12 px-4">
+            <h2 class="text-xl font-semibold mb-2">Output Folder</h2>
+            <div class="flex mb-4">
+                <input
+                    id="outCurrentPath"
+                    type="text"
+                    class="flex-grow p-2 border rounded-l"
+                    value="/"
+                    readonly
+                />
+                <button id="outUpDir" class="button-secondary">Up</button>
+                <button id="outSelectFolder" class="button-primary rounded-r">
+                    Select Folder
+                </button>
+            </div>
+            <div id="outFileList" class="border p-4 h-48 overflow-y-auto"></div>
+            <p id="outSelectedItem" class="mt-2 text-gray-700"></p>
+        </div>
+
+        <div class="w-2/12 pl-4">
+            <div class="button-container flex flex-col justify-center h-full">
+                <button onclick="submitPaths('view')" class="button mb-4">
+                    View
+                </button>
+                <button onclick="submitPaths('analysis')" class="button">
+                    Analysis
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <style>
     .button-container {
         margin-top: 20px;
     }
-    .button {
+    .button,
+    .button-primary,
+    .button-secondary {
         display: inline-block;
         padding: 10px 20px;
-        margin: 0 10px;
-        background-color: #4caf50;
+        margin: 0;
         color: white;
         text-decoration: none;
-        border-radius: 5px;
         border: none;
         cursor: pointer;
     }
-    .button:hover {
-        background-color: #45a049;
+    .button {
+        background-color: #3d8b40;
+    }
+    .button-secondary {
+        background-color: #1b5e20;
+    }
+    .button-primary {
+        background-color: #2e7d32;
+    }
+    .button:hover,
+    .button-primary:hover,
+    .button-secondary:hover {
+        opacity: 0.9;
+    }
+    .button {
+        border-radius: 5px;
+        width: 100%;
     }
 </style>
 
-<script>
-    document.getElementById("nd2_paths").value = "{{ nd2_paths[0] }}";
-    document.getElementById("out_paths").value = "{{ out_paths[0] }}";
-
-    function submitForm(destination) {
-        document.getElementById("redirect_to").value = destination;
-        document.getElementById("pathForm").submit();
-    }
-</script>
+<script src="{{ url_for('static', filename='selection.js') }}"></script>
 {% endblock %}

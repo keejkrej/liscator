@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from gui import CellViewer
 import pyama_util
+import os
 
 class App:
     def __init__(self):
@@ -14,27 +15,25 @@ class App:
 
         @self.app.route('/')
         def index():
-            nd2_paths = self.load_paths('nd2_paths.txt')
-            out_paths = self.load_paths('out_paths.txt')
-            if not nd2_paths or not out_paths:
-                return "Error: Missing file paths", 400
-            return render_template('index.html', nd2_paths=nd2_paths, out_paths=out_paths)
+            return render_template('index.html')
 
         @self.app.route('/select_paths', methods=['POST'])
         def select_paths():
-            nd2_path = request.form['nd2_paths']
-            out_path = request.form['out_paths']
-            redirect_to = request.form['redirect_to']
+            data = request.json
+            nd2_path = data['nd2_path']
+            out_path = data['out_path']
+            redirect_to = data['redirect_to']
+
+            if not nd2_path or not out_path:
+                return jsonify({'error': 'Both ND2 path and output path must be selected'}), 400
 
             self.cell_viewer = CellViewer(nd2_path=nd2_path, output_path=out_path)
-            self.cell_viewer.nd2_path = nd2_path
-            self.cell_viewer.output_path = out_path
             if redirect_to == 'view':
-                return redirect(url_for('view'))
+                return jsonify({'redirect': url_for('view')})
             elif redirect_to == 'analysis':
-                return redirect(url_for('analysis'))
+                return jsonify({'redirect': url_for('analysis')})
             else:
-                return redirect(url_for('index'))
+                return jsonify({'redirect': url_for('index')})
 
         @self.app.route('/view', methods=['GET', 'POST'])
         def view():
@@ -133,6 +132,24 @@ class App:
                                    n_channels=self.cell_viewer.channel_max,
                                    n_frames=self.cell_viewer.frame_max)
 
+        @self.app.route('/list_directory', methods=['GET'])
+        def list_directory():
+            path = request.args.get('path', '/')
+            try:
+                items = os.listdir(path)
+                return jsonify({
+                    'path': path,
+                    'items': [{'name': item, 'isDirectory': os.path.isdir(os.path.join(path, item))} for item in items]
+                })
+            except Exception as e:
+                return jsonify({'error': str(e)}), 400
+
+        @self.app.route('/select_folder', methods=['POST'])
+        def select_folder():
+            path = request.json['path']
+            # Here you can add logic to handle the selected folder
+            return jsonify({'message': f'Folder selected: {path}'})
+
     def load_paths(self, file_path):
         with open(file_path, mode='r') as file:
             paths = [line.strip() for line in file]
@@ -146,5 +163,4 @@ app_instance.routes()
 flask_app = app_instance.app
 
 if __name__ == '__main__':
-    app_instance.run(host='0.0.0.0',port=8000, debug=True)
-    # app.run(host='0.0.0.0',port=8000, debug=True)
+    app_instance.run()
