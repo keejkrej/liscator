@@ -1,0 +1,244 @@
+{% extends "layout.html" %} {% block styles %}
+<title>LISCA: Analysis</title>
+<style>
+    /* Copy the styles from view.html, excluding styles for sliders and images */
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        height: 100vh;
+        background-color: #ffffff;
+    }
+
+    .container {
+        text-align: center;
+    }
+
+    .controls {
+        margin-top: 20px;
+        max-width: 300px;
+        width: auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding-left: 10px;
+    }
+
+    .control-group {
+        margin-bottom: 15px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    select {
+        width: 100%;
+        padding: 5px;
+    }
+
+    .button-group {
+        display: flex;
+        flex-direction: column;
+        width: 90vw;
+        max-width: inherit;
+    }
+    .button {
+        flex-grow: 1;
+        justify-content: center;
+        text-align: center;
+        background-color: rgb(227, 98, 98);
+        margin: 3px;
+        padding: 10px;
+        max-width: inherit;
+    }
+
+    .range-label {
+        font-weight: bold;
+        margin-bottom: 5px;
+        display: block;
+    }
+
+    .stepper-pair {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+
+    .stepper {
+        display: flex;
+        align-items: center;
+        width: 48%;
+    }
+
+    .stepper label {
+        margin-right: 10px;
+        white-space: nowrap;
+    }
+
+    .stepper input[type="number"] {
+        width: 60px;
+        padding: 5px;
+    }
+
+    .channel-selection {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 15px;
+    }
+
+    .channel-dropdown {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 5px;
+    }
+
+    .channel-dropdown label {
+        margin-right: 10px;
+        white-space: nowrap;
+    }
+
+    .channel-dropdown select {
+        width: 120px;
+        padding: 5px;
+    }
+</style>
+{% endblock %} {% block body %}
+<body>
+    <div class="container">
+        <h1>LISCA: Analysis</h1>
+        <div class="controls">
+            <!-- Channel selection -->
+            <div class="control-group">
+                <label class="range-label">Channel selection</label>
+                <div class="channel-selection">
+                    {% for i in range(n_channels + 1) %}
+                    <div class="channel-dropdown">
+                        <label for="channel_{{ i }}">{{ i }} Channel:</label>
+                        <select id="channel_{{ i }}" name="channel_{{ i }}">
+                            <option value="Brightfield">Brightfield</option>
+                            <option value="Fluorescent">Fluorescent</option>
+                            <option value="Not Used">Not Used</option>
+                        </select>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <!-- Selects -->
+            <div class="control-group">
+                <label class="range-label">Position range</label>
+                <div class="stepper-pair">
+                    <div class="stepper">
+                        <label for="position_min">Min:</label>
+                        <input
+                            type="number"
+                            id="position_min"
+                            name="position_min"
+                            min="0"
+                            max="{{ n_positions - 1 }}"
+                            value="0"
+                        />
+                    </div>
+                    <div class="stepper">
+                        <label for="position_max">Max:</label>
+                        <input
+                            type="number"
+                            id="position_max"
+                            name="position_max"
+                            min="0"
+                            max="{{ n_positions - 1 }}"
+                            value="{{ n_positions - 1 }}"
+                        />
+                    </div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="range-label">Frame range</label>
+                <div class="stepper-pair">
+                    <div class="stepper">
+                        <label for="frame_min">Min:</label>
+                        <input
+                            type="number"
+                            id="frame_min"
+                            name="frame_min"
+                            min="0"
+                            max="{{ n_frames }}"
+                            value="0"
+                        />
+                    </div>
+                    <div class="stepper">
+                        <label for="frame_max">Max:</label>
+                        <input
+                            type="number"
+                            id="frame_max"
+                            name="frame_max"
+                            min="0"
+                            max="{{ n_frames }}"
+                            value="{{ n_frames }}"
+                        />
+                    </div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label for="expand_labels">Expand Labels:</label>
+                <input
+                    type="checkbox"
+                    id="expand_labels"
+                    name="expand_labels"
+                    checked
+                />
+            </div>
+            <div class="control-group">
+                <label for="square_size">Square Size (μm):</label>
+                <input
+                    type="number"
+                    id="square_size"
+                    name="square_size"
+                    min="1"
+                    value="30"
+                />
+            </div>
+            <div class="button-group">
+                <button class="button" id="do_segmentation">
+                    Do Segmentation
+                </button>
+                <button class="button" id="do_tracking">Do Tracking</button>
+                <button class="button" id="do_square_rois">
+                    Do Square ROIs for Position(s)
+                </button>
+                <button class="button">Output Directory</button>
+            </div>
+        </div>
+    </div>
+</body>
+<script src="{{ url_for('static', filename='api.js') }}"></script>
+<script>
+    // Copy the JavaScript code for do_segmentation, do_tracking, and do_square_rois from view.html
+    document
+        .getElementById("do_segmentation")
+        .addEventListener("click", function () {
+            // ... (copy the code from view.html)
+        });
+
+    document
+        .getElementById("do_tracking")
+        .addEventListener("click", function () {
+            // ... (copy the code from view.html)
+        });
+
+    document
+        .getElementById("do_square_rois")
+        .addEventListener("click", function () {
+            // ... (copy the code from view.html)
+        });
+</script>
+{% endblock %}
