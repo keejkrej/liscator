@@ -28,6 +28,9 @@ class App:
                 return jsonify({'error': 'Both ND2 path and output path must be selected'}), 400
 
             self.cell_viewer = CellViewer(nd2_path=nd2_path, output_path=out_path)
+            self.cell_viewer.nd2_path = nd2_path
+            self.cell_viewer.output_path = out_path
+
             if redirect_to == 'view':
                 return jsonify({'redirect': url_for('view')})
             elif redirect_to == 'analysis':
@@ -47,7 +50,8 @@ class App:
                                    n_channels=self.cell_viewer.channel_max,
                                    n_frames=self.cell_viewer.frame_max,
                                    all_particles_len=self.cell_viewer.all_particles_len,
-                                   current_particle_index=current_particle_index)
+                                   current_particle_index=current_particle_index,
+                                   brightness_plot=self.cell_viewer.brightness_plot)
 
         @self.app.route('/preprocess', methods=['GET', 'POST'])
         def processing():
@@ -78,7 +82,8 @@ class App:
 
             self.cell_viewer.get_channel_image()
             self.cell_viewer.draw_outlines()
-            return jsonify({'channel_image': self.cell_viewer.return_image()})
+            return jsonify({'channel_image': self.cell_viewer.return_image(),
+                            'brightness_plot': self.cell_viewer.brightness_plot})
 
         @self.app.route('/do_segmentation', methods=['POST'])
         def do_segmentation():

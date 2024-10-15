@@ -21,23 +21,36 @@ STRUCT5 = np.ones((5,5), dtype=np.bool_)
 STRUCT5[[0,0,-1,-1], [0,-1,0,-1]] = False
 
 @nb.njit
-def window_std(img):
-    """Calculate unnormed variance of 'img'"""
+def window_std(img: np.ndarray) -> float:
+    """
+    Calculate unnormed variance of 'img'
+    Refer to https://en.wikipedia.org/wiki/Variance#Unbiased_sample_variance
+    Refer to Pyama https://github.com/SoftmatterLMU-RaedlerGroup/pyama/tree/master
+
+    Parameters:
+    img (np.ndarray): Input image
+
+    Returns:
+    float: Unnormed variance of the image
+    """
     return np.sum((img - np.mean(img))**2)
 
-
 @nb.njit
-def generic_filter(img, fun, size=3, reflect=False):
-    """Apply filter to image.
+def generic_filter(img: np.ndarray, fun: callable, size: int = 3, reflect: bool = False) -> np.ndarray:
+    """
+    Apply filter to image.
 
-    img -- the image to be filtered
-    fun -- the filter function to be applied, must accept subimage of 'img' as only argument and return a scalar
-    size -- the size (side length) of the mask; must be an odd integer
-    reflect -- switch for border mode: True for 'reflect', False for 'mirror'
+    Parameters:
+    img (np.ndarray): The image to be filtered
+    fun (callable): The filter function to be applied, must accept subimage of 'img' as only argument and return a scalar. "Fun" stands for function and callable should stand for function in Python
+    size (int): The size (side length) of the kernel. Must be an odd integer
+    reflect (bool): Switch for border mode: True for 'reflect', False for 'mirror'. Reflect and Mirror should be filling the borders of the img.
 
-    Returns a np.float64 array with same shape as 'img'.
+    Returns:
+    np.ndarray: Filtered image as a np.float64 array with same shape as 'img'
 
-    This function is intended to be a numba-capable replacement of scipy.ndimage.generic_filter.
+    Raises:
+    ValueError: If 'size' is not an odd integer
     """
     if size % 2 != 1:
         raise ValueError("'size' must be an odd integer")
@@ -67,19 +80,18 @@ def generic_filter(img, fun, size=3, reflect=False):
     return filtered_img
 
 
-def binarize_frame(img, mask_size=3):
-
+def binarize_frame(img: np.ndarray, mask_size: int = 3) -> np.ndarray:
     """
     Coarse segmentation of phase-contrast image frame
+    Refer to OpenCV tutorials for more information on binarization/thresholding techniques.
 
     Parameters:
-    img (numpy.ndarray): The image to be binarized
-    mask_size (int): The size of the mask to be used in the binarization process
+    img (np.ndarray): The image to be binarized
+    mask_size (int): The size of the mask to be used in the binarization process (mask refers to kernel size in image processing)
 
     Returns:
-    numpy.ndarray: Binarized image of frame
+    np.ndarray: Binarized image of frame
     """
-
     # Get logarithmic standard deviation at each pixel
     std_log = generic_filter(img, window_std, size=mask_size)
     std_log[std_log>0] = (np.log(std_log[std_log>0]) - np.log(mask_size**2 - 1)) / 2
@@ -101,12 +113,36 @@ def binarize_frame(img, mask_size=3):
 
     return img_bin
 
-def csv_output(out_dir,pos,mins,use_square_rois=True):
+def csv_output(out_dir: str, pos: list, mins: float, use_square_rois: bool = True) -> None:
+    """
+    Generate CSV output for tracked positions
+
+    Parameters:
+    out_dir (str): Output directory path
+    pos (list): List of positions to process
+    mins (float): Minutes per frame
+    use_square_rois (bool): Whether to use square ROIs
+
+    Returns:
+    None
+    """
     folders = get_tracked_folders(out_dir,pos)
     for folder in folders:
         csv_output_position(folder[0],folder[1],mins,use_square_rois)
 
-def csv_output_position(pos,pos_path,mins,use_square_rois):
+def csv_output_position(pos: int, pos_path: pathlib.Path, mins: float, use_square_rois: bool) -> None:
+    """
+    Generate CSV output for a single position
+
+    Parameters:
+    pos (int): Position number
+    pos_path (pathlib.Path): Path to position directory
+    mins (float): Minutes per frame
+    use_square_rois (bool): Whether to use square ROIs
+
+    Returns:
+    None
+    """
     tracks_path = pos_path.joinpath('tracks.csv')
     tracks = pd.read_csv(tracks_path.absolute(),index_col=0)
 
@@ -143,7 +179,21 @@ def csv_output_position(pos,pos_path,mins,use_square_rois):
     print('Done')
 
 
-def table_to_image(pos_path,particles,table,name):
+def table_to_image(pos_path: pathlib.Path, particles: list, table: pd.DataFrame, name: str) -> None:
+    """
+    Convert table data to image and save it.
+    This is a post-processing step.
+    These converts the table data to the fluorescent tracks image.
+
+    Parameters:
+    pos_path (pathlib.Path): Path to position directory
+    particles (list): List of particle IDs
+    table (pd.DataFrame): Data table
+    name (str): Name for the output file
+
+    Returns:
+    None
+    """
     plt.ioff()
     fig = plt.figure()
 
@@ -156,12 +206,24 @@ def table_to_image(pos_path,particles,table,name):
     plt.tight_layout()
 
     fig.savefig(pos_path.joinpath(name + '.png').absolute())
-    fig.savefig('/home/s/Simon.Prins/Desktop/' + name + '.png')
 
     plt.ion()
 
-def csv_get_table(particles,tracks,frames,mins,col):
+def csv_get_table(particles: list, tracks: pd.DataFrame, frames: list, mins: float, col: str) -> pd.DataFrame:
+    """
+    Post-processing step that converts from TrackPy to Pyama format.
+    Extract data from tracks and create a table.
 
+    Parameters:
+    particles (list): List of particle IDs
+    tracks (pd.DataFrame): Tracking data
+    frames (list): List of frame numbers
+    mins (float): Minutes per frame
+    col (str): Column name to extract
+
+    Returns:
+    pd.DataFrame: Extracted data table
+    """
     keys = []
     keys.append('time')
     for p in particles:
@@ -186,12 +248,36 @@ def csv_get_table(particles,tracks,frames,mins,col):
     return pd.DataFrame(data)
 
 
-def square_roi(out_dir,pos,micron_size):
+def square_roi(out_dir: str, pos: list, micron_size: float) -> None:
+    """
+    Post-processing step where the micron_size defines the length of the squares.
+    Apply square ROI to tracked positions
+
+    Parameters:
+    out_dir (str): Output directory path
+    pos (list): List of positions to process
+    micron_size (float): Size of ROI in microns
+
+    Returns:
+    None
+    """
     folders = get_tracked_folders(out_dir,pos)
     for folder in folders:
         square_roi_position(folder[0],folder[1],micron_size)
 
-def square_roi_position(pos,pos_path,micron_size):
+def square_roi_position(pos: int, pos_path: pathlib.Path, micron_size: float) -> None:
+    """
+    Post-processing step where the micron_size defines the length of the squares.
+    Apply square ROI to a single position.
+
+    Parameters:
+    pos (int): Position number
+    pos_path (pathlib.Path): Path to position directory
+    micron_size (float): Size of ROI in microns
+
+    Returns:
+    None
+    """
     tracks_path = pos_path.joinpath('tracks.csv')
     tracks = pd.read_csv(tracks_path.absolute(),index_col=0)
 
@@ -229,7 +315,21 @@ def square_roi_position(pos,pos_path,micron_size):
     tracks.to_csv(tracks_path.absolute())
     print("Done")
 
-def square_roi_position_old(nd2_path,out_dir,pos,micron_size):
+
+# to be deprecated since the function above is the only one being used.
+def square_roi_position_old(nd2_path: str, out_dir: str, pos: int, micron_size: float) -> None:
+    """
+    Old version of square ROI application to a single position
+
+    Parameters:
+    nd2_path (str): Path to ND2 file
+    out_dir (str): Output directory path
+    pos (int): Position number
+    micron_size (float): Size of ROI in microns
+
+    Returns:
+    None
+    """
     if not pathlib.Path(nd2_path).is_file():
         print("Invalid ND2 Path")
         return
@@ -288,7 +388,16 @@ def square_roi_position_old(nd2_path,out_dir,pos,micron_size):
     print("Done")
 
 
-def get_position_folders(out_dir):
+def get_position_folders(out_dir: str) -> list:
+    """
+    Get a list of position folders from the output directory
+
+    Parameters:
+    out_dir (str): Output directory path
+
+    Returns:
+    list: List of tuples containing position number and path
+    """
     folders =  []
     for path in pathlib.Path(out_dir).iterdir():
         if not path.is_dir():
@@ -301,7 +410,17 @@ def get_position_folders(out_dir):
         folders.append((pos,path))
     return folders
 
-def get_tracking_folders(out_dir,pos):
+def get_tracking_folders(out_dir: str, pos: list) -> list:
+    """
+    Get a list of tracking folders for specified positions
+
+    Parameters:
+    out_dir (str): Output directory path
+    pos (list): List of position numbers
+
+    Returns:
+    list: List of tuples containing position number and path
+    """
     pos = list(set(pos))
     pos_folders = get_position_folders(out_dir)
 
@@ -323,7 +442,17 @@ def get_tracking_folders(out_dir,pos):
         folders.append(folder)
     return folders
 
-def get_tracked_folders(out_dir,pos):
+def get_tracked_folders(out_dir: str, pos: list) -> list:
+    """
+    Get a list of tracked folders for specified positions
+
+    Parameters:
+    out_dir (str): Output directory path
+    pos (list): List of position numbers
+
+    Returns:
+    list: List of tuples containing position number and path
+    """
     pos = list(set(pos))
     pos_folders = get_position_folders(out_dir)
 
@@ -350,12 +479,37 @@ def get_tracked_folders(out_dir,pos):
         folders.append(folder)
     return folders
 
-def tracking_pyama(out_dir,pos,expand=0):
+def tracking_pyama(out_dir: str, pos: list, expand: int = 0) -> None:
+    """
+    Perform Pyama tracking on specified positions and saves them into the output directory
+
+    Parameters:
+    out_dir (str): Output directory path
+    pos (list): List of position numbers
+    expand (int): Expansion factor for labels
+
+    Returns:
+    None
+    """
     folders = get_tracking_folders(out_dir,pos)
     for folder in folders:
         track_position_pyama(folder[0],folder[1],expand)
 
-def track_position_pyama(pos,pos_path,expand):
+def track_position_pyama(pos: int, pos_path: pathlib.Path, expand: int) -> None:
+    """
+    Perform Pyama tracking on a single position.
+    data.h5 contains the segmentation and the background corrected fluorescence images.
+    features.csv contains the features of the particles. Bounding boxes, integrated fluorescence.
+    The track is being saved as tracks.csv file
+
+    Parameters:
+    pos (int): Position number
+    pos_path (pathlib.Path): Path to position directory
+    expand (int): Expansion factor for labels
+
+    Returns:
+    None
+    """
     features_path = pos_path.joinpath('features.csv')
     features = pd.read_csv(features_path.absolute(),index_col=0)
 
@@ -477,7 +631,17 @@ def track_position_pyama(pos,pos_path,expand):
     print("Done")
 
 
-def position_path(out_dir,pos):
+def position_path(out_dir: str, pos: int) -> pathlib.Path:
+    """
+    Get the path for a specific position
+
+    Parameters:
+    out_dir (str): Output directory path
+    pos (int): Position number
+
+    Returns:
+    pathlib.Path: Path to the position directory
+    """
     for path in pathlib.Path(out_dir).iterdir():
         if not path.is_dir():
             continue
@@ -487,7 +651,16 @@ def position_path(out_dir,pos):
     return None
 
 
-def pyama_segmentation(img):
+def pyama_segmentation(img: np.ndarray) -> np.ndarray:
+    """
+    Perform Pyama segmentation on an image
+
+    Parameters:
+    img (np.ndarray): Input image
+
+    Returns:
+    np.ndarray: Labeled segmentation of the image
+    """
     binary_segmentation = binarize_frame(img)
 
     # remove small objects MIN_SIZE=1000
@@ -496,14 +669,29 @@ def pyama_segmentation(img):
     # convert binary mask to labels (1,2,3,...)
     return sk.measure.label(binary_segmentation, connectivity=1)
 
+def segment_positions(nd2_path: str, out_dir: str, pos: list, seg_channel: int, fl_channels: list, frame_min: int = None, frame_max: int = None, bg_corr: bool = True) -> None:
+    """
+    Segment positions from an ND2 file
 
-def segment_positions(nd2_path,out_dir,pos,seg_channel,fl_channels,frame_min=None,frame_max=None, bg_corr=True):
+    Parameters:
+    nd2_path (str): Path to ND2 file
+    out_dir (str): Output directory path
+    pos (list): List of position numbers
+    seg_channel (int): Segmentation channel index
+    fl_channels (list): List of fluorescence channel indices
+    frame_min (int): Minimum frame number
+    frame_max (int): Maximum frame number
+    bg_corr (bool): Whether to perform background correction
+
+    Returns:
+    None
+    """
     if not pathlib.Path(nd2_path).is_file():
         print("Invalid ND2 Path")
         return
 
     fl_channels = list(set(fl_channels))
-    pos = list(set(pos))
+    pos = list(set(pos)) # remove duplicates
 
     nd2 = ND2Reader(nd2_path)
 
@@ -529,124 +717,94 @@ def segment_positions(nd2_path,out_dir,pos,seg_channel,fl_channels,frame_min=Non
     padding = int(np.ceil(np.log10(max(nd2.metadata['fields_of_view']))))
     frames = list(nd2.metadata['frames'])
 
-    if not frame_min is None:
-        if not frame_min in frames:
+    if frame_min is not None:
+        if frame_min not in frames:
             print('Invalid frame_min')
             return
     else:
         frame_min = frames[0]
 
-    if not frame_max is None:
-        if not frame_max in frames:
+    if frame_max is not None:
+        if frame_max not in frames:
             print('Invalid frame_max')
             return
     else:
-        frame_max = frames[len(frames)-1]
+        frame_max = frames[-1]
 
-    if frame_max <  frame_min:
+    if frame_max < frame_min:
         print('frame_max must be greater or equal to frame_min')
         return
 
-    frames = [f for f in frames if f >= frame_min and f <= frame_max]
+    frames = [f for f in frames if frame_min <= f <= frame_max]
 
-    width,height,num_frames = nd2.metadata['width'],nd2.metadata['height'],len(frames)
+    width, height, num_frames = nd2.metadata['width'], nd2.metadata['height'], len(frames)
 
     print('Segmentation Channel: ' + nd2.metadata['channels'][seg_channel])
     print('Fluorescence Channels: ' + ', '.join(fl_channel_names))
 
     for pos in positions:
-        print("Segmenting position " + str(pos))
-        pos_dir = pathlib.Path(out_dir).joinpath('XY' + str(pos).zfill(padding))
+        print(f"Segmenting position {pos}")
+        pos_dir = pathlib.Path(out_dir).joinpath(f'XY{str(pos).zfill(padding)}')
         pos_dir.mkdir(parents=True, exist_ok=True)
 
         file_path = pos_dir.joinpath('data.h5')
-        file_handle = h5py.File(file_path.absolute(), "w")
 
-        data_labels = file_handle.create_dataset('labels',(num_frames,height,width),dtype=np.uint16,chunks=(1,height,width))
-        data_fl = file_handle.create_dataset('fluorescence',(num_frames,len(fl_channels),height,width),dtype=np.float64,chunks=(1,1,height,width))
+        feature_keys = ['x', 'y'] + [f'brightness_{i}' for i in range(len(fl_channels))] + ['area', 'frame', 'label', 'bbox_x1', 'bbox_x2', 'bbox_y1', 'bbox_y2']
+        feature_data = {key: [] for key in feature_keys}
 
-        file_handle.attrs['frame_min'] = frame_min
-        file_handle.attrs['frame_max'] = frame_max
-        file_handle.attrs['seg_channel'] = seg_channel
-        file_handle.attrs['fl_channels'] = fl_channels
-        file_handle.attrs['fl_channel_names'] = fl_channel_names
-        file_handle.attrs['width'] = nd2.metadata['width']
-        file_handle.attrs['height'] = nd2.metadata['height']
-        file_handle.attrs['pixel_microns'] = nd2.metadata['pixel_microns']
+        with h5py.File(file_path.absolute(), "w") as file_handle:
+            data_labels = file_handle.create_dataset('labels', (num_frames, height, width), dtype=np.uint16, chunks=(1, height, width))
+            data_fl = file_handle.create_dataset('fluorescence', (num_frames, len(fl_channels), height, width), dtype=np.float64, chunks=(1, 1, height, width))
 
-        feature_keys = []
-        feature_keys.append('x')
-        feature_keys.append('y')
+            file_handle.attrs['frame_min'] = frame_min
+            file_handle.attrs['frame_max'] = frame_max
+            file_handle.attrs['seg_channel'] = seg_channel
+            file_handle.attrs['fl_channels'] = fl_channels
+            file_handle.attrs['fl_channel_names'] = fl_channel_names
+            file_handle.attrs['width'] = nd2.metadata['width']
+            file_handle.attrs['height'] = nd2.metadata['height']
+            file_handle.attrs['pixel_microns'] = nd2.metadata['pixel_microns']
 
-        for i in range(len(fl_channels)):
-            feature_keys.append('brightness_' + str(i))
+            for index, frame in enumerate(frames):
+                frame_image = nd2.get_frame_2D(t=frame, c=seg_channel, v=pos)
+                binary_segmentation = binarize_frame(frame_image)
 
-        feature_keys.append('area')
-        feature_keys.append('frame')
-        feature_keys.append('label')
-        feature_keys.append('bbox_x1')
-        feature_keys.append('bbox_x2')
-        feature_keys.append('bbox_y1')
-        feature_keys.append('bbox_y2')
+                sk.morphology.remove_small_objects(binary_segmentation, min_size=1000, out=binary_segmentation)
+                label_segmentation = sk.measure.label(binary_segmentation, connectivity=1)
 
-        feature_data = {}
-        for key in feature_keys:
-            feature_data[key] = []
+                frame_fl_images = []
+                for c in fl_channels:
+                    frame_fl_image = nd2.get_frame_2D(t=frame, c=c, v=pos)
+                    if bg_corr:
+                        frame_fl_image = background_correction(frame_fl_image, label_segmentation, 5, 5, 0.5)
+                    frame_fl_images.append(frame_fl_image)
 
-        for index,frame in enumerate(frames):
-            frame_image = nd2.get_frame_2D(t=frame,c=seg_channel,v=pos)
-            binary_segmentation = binarize_frame(frame_image)
+                props = sk.measure.regionprops(label_segmentation)
+                print(f"Frame {frame}: {len(props)} features")
 
-            # remove small objects MIN_SIZE=1000
-            sk.morphology.remove_small_objects(binary_segmentation,min_size=1000,out=binary_segmentation)
+                for prop in props:
+                    if prop.bbox[0] == 0 or prop.bbox[1] == 0 or prop.bbox[2] == height or prop.bbox[3] == width:
+                        label_segmentation[label_segmentation == prop.label] = 0
+                        continue
 
-            # convert binary mask to labels (1,2,3,...)
-            label_segmentation = sk.measure.label(binary_segmentation, connectivity=1)
+                    x, y = prop.centroid
+                    feature_data['x'].append(x)
+                    feature_data['y'].append(y)
 
-            frame_fl_images = []
-            for c in fl_channels:
-                frame_fl_image = nd2.get_frame_2D(t=frame,c=c,v=pos)
-                if bg_corr:
-                    frame_fl_image = background_correction(frame_fl_image,label_segmentation,5,5,0.5)
-                frame_fl_images.append(frame_fl_image)
+                    for i, fl_image in enumerate(frame_fl_images):
+                        feature_data[f'brightness_{i}'].append(fl_image[tuple(prop.coords.T)].sum())
 
-            props = sk.measure.regionprops(label_segmentation)
-            print("Frame " + str(frame) + ": " + str(len(props)) + " features")
+                    feature_data['area'].append(prop.area)
+                    feature_data['frame'].append(frame)
+                    feature_data['label'].append(prop.label)
+                    feature_data['bbox_x1'].append(prop.bbox[0])
+                    feature_data['bbox_y1'].append(prop.bbox[1])
+                    feature_data['bbox_x2'].append(prop.bbox[2] - 1)
+                    feature_data['bbox_y2'].append(prop.bbox[3] - 1)
 
-            frame_feature_count = 0
-            for prop in props:
-
-                # Remove Edge Touching objects
-                if prop.bbox[0] == 0 or prop.bbox[1] == 0 or prop.bbox[2] == height or prop.bbox[3] == width:
-                    label_segmentation[label_segmentation == prop.label] = 0
-                    continue
-
-                #prop.mass = bg_corr[tuple(prop.coords.T)].sum()
-                x,y = prop.centroid
-                feature_data['x'].append(x)
-                feature_data['y'].append(y)
-
-                for i in range(len(frame_fl_images)):
-                    feature_data['brightness_' + str(i)].append(frame_fl_images[i][tuple(prop.coords.T)].sum())
-
-                feature_data['area'].append(prop.area)
-                feature_data['frame'].append(frame)
-                feature_data['label'].append(prop.label)
-
-                # upper exclusive bounding box (hence -1)
-                feature_data['bbox_x1'].append(prop.bbox[0])
-                feature_data['bbox_y1'].append(prop.bbox[1])
-                feature_data['bbox_x2'].append(prop.bbox[2]-1)
-                feature_data['bbox_y2'].append(prop.bbox[3]-1)
-
-                frame_feature_count += 1
-
-            data_labels[index,:,:] = label_segmentation[:,:]
-
-            for i in range(len(frame_fl_images)):
-                data_fl[index,i,:,:] = frame_fl_images[i][:,:]
-
-        file_handle.close()
+                data_labels[index, :, :] = label_segmentation
+                for i, fl_image in enumerate(frame_fl_images):
+                    data_fl[index, i, :, :] = fl_image
 
         features_path = pos_dir.joinpath('features.csv')
         features = pd.DataFrame(feature_data)
@@ -654,9 +812,12 @@ def segment_positions(nd2_path,out_dir,pos,seg_channel,fl_channels,frame_min=Non
 
     print("Done")
 
-
-
 def background_spline(image,img_mask,countX,countY,overlap):
+    """
+    It creates a grid of the image with support pillars. Then you get the mean, a spline and substract it from the image.
+
+    It is based on the Schwarzfischer paper (not exactly like the one applied there, but inspired on it)
+    """
     h,w = image.shape
 
 
@@ -694,6 +855,10 @@ def background_spline(image,img_mask,countX,countY,overlap):
     return bg_spline(x=range(w), y=range(h)).T
 
 def background_correction(image,img_mask,countX,countY,overlap = 0.1):
+    """
+
+    """
+
     h,w = image.shape
     patch = background_spline(image,img_mask,countX,countY,overlap)
     bg_mean = patch.mean()
