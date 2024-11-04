@@ -406,7 +406,7 @@ def get_position_folders(out_dir: str) -> list:
             continue
 
         number_str = path.name[2:].lstrip('0')
-        pos = int(number_str)
+        pos = int(number_str) if number_str else 0
         folders.append((pos,path))
     return folders
 
@@ -649,6 +649,7 @@ def position_path(out_dir: str, pos: int) -> pathlib.Path:
             continue
         return path
     return None
+
 
 def pyama_segmentation(img: np.ndarray) -> np.ndarray:
     """
