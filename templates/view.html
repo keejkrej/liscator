@@ -16,6 +16,8 @@
 
     .container {
         text-align: center;
+        width: 100%;
+        justify-content: flex-start;
     }
 
     img {
@@ -23,14 +25,27 @@
         height: auto;
     }
 
-    .controls {
+    .content-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        gap: 20px;
         margin-top: 20px;
+    }
+
+    .controls {
+        flex: 0 0 auto;
         max-width: 300px;
         width: auto;
         display: flex;
         flex-direction: column;
         align-items: center;
         padding-left: 10px;
+    }
+
+    .plot-container {
+        flex: 1 1 auto;
+        max-width: 600px;
     }
 
     .control-group {
@@ -124,95 +139,103 @@
         padding: 5px;
     }
 
+    #brightness-plot {
+        width: 100%;
+        height: 400px;
+    }
 </style>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 {% endblock %}
 
 {% block body %}
 
 <body>
     <div class="container">
-        <h1>LISCA: Visual Control</h1>
         <img id="channel_image" src="data:image/jpeg;base64,{{ channel_image }}">
-        <div class="controls">
-            <!-- Sliders -->
-            <div class="control-group">
-                <label for="position_slider">Position: </label>
-                <input type="range" id="position_slider" name="position_slider" min="0" max="{{ n_positions - 1 }}" value="0">
-                <span id="position_value">0/ {{ n_positions - 1 }}</span>
-            </div>
-            <div class="control-group">
-                <label for="channel_slider">Channel:</label>
-                <input type="range" id="channel_slider" name="channel_slider" min="0" max="{{n_channels}}" value="0">
-                <span id="channel_value">0/ {{ n_channels }}</span>
-            </div>
-            <div class="control-group">
-                <label for="timeframe_slider">Frame:</label>
-                <input type="range" id="timeframe_slider" name="timeframe_slider" min="0" max="{{n_frames}}" value="0">
-                <span id="timeframe_value">0/ {{ n_frames }}</span>
-            </div>
-            <div class="control-group">
-                <label for="particle_slider">Particle: </label>
-                <input type="range" id="particle_slider" name="particle_slider" min="0" max="{{ all_particles_len - 1 }}" value="{{ current_particle_index }}">
-                <span id="particle_value">{{ current_particle_index }}/ {{ all_particles_len - 1 }}</span>
-            </div>
-            <!-- Channel selection -->
-            <div class="control-group">
-                <label class="range-label">Channel selection</label>
-                <div class="channel-selection">
-                    {% for i in range(n_channels + 1) %}
-                    <div class="channel-dropdown">
-                        <label for="channel_{{ i }}">{{ i }} Channel:</label>
-                        <select id="channel_{{ i }}" name="channel_{{ i }}">
-                            <option value="Brightfield">Brightfield</option>
-                            <option value="Fluorescent">Fluorescent</option>
-                            <option value="Not Used">Not Used</option>
-                        </select>
-                    </div>
-                    {% endfor %}
+        <div class="content-wrapper">
+            <div class="controls">
+                <!-- Sliders -->
+                <div class="control-group">
+                    <label for="position_slider">Position: </label>
+                    <input type="range" id="position_slider" name="position_slider" min="0" max="{{ n_positions - 1 }}" value="0">
+                    <span id="position_value">0/ {{ n_positions - 1 }}</span>
                 </div>
-            </div>div>
-            <!-- Selects -->
-            <div class="control-group">
-                <label class="range-label">Position range</label>
-                <div class="stepper-pair">
-                    <div class="stepper">
-                        <label for="position_min">Min:</label>
-                        <input type="number" id="position_min" name="position_min" min="0" max="{{ n_positions - 1 }}" value="0">
-                    </div>
-                    <div class="stepper">
-                        <label for="position_max">Max:</label>
-                        <input type="number" id="position_max" name="position_max" min="0" max="{{ n_positions - 1 }}" value="{{ n_positions - 1 }}">
+                <div class="control-group">
+                    <label for="channel_slider">Channel:</label>
+                    <input type="range" id="channel_slider" name="channel_slider" min="0" max="{{n_channels}}" value="0">
+                    <span id="channel_value">0/ {{ n_channels }}</span>
+                </div>
+                <div class="control-group">
+                    <label for="timeframe_slider">Frame:</label>
+                    <input type="range" id="timeframe_slider" name="timeframe_slider" min="0" max="{{n_frames}}" value="0">
+                    <span id="timeframe_value">0/ {{ n_frames }}</span>
+                </div>
+                <div class="control-group">
+                    <label for="particle_slider">Particle: </label>
+                    <input type="range" id="particle_slider" name="particle_slider" min="0" max="{{ all_particles_len - 1 }}" value="{{ current_particle_index }}">
+                    <span id="particle_value">{{ current_particle_index }}/ {{ all_particles_len - 1 }}</span>
+                </div>
+                <!-- Channel selection -->
+                <div class="control-group">
+                    <label class="range-label">Channel selection</label>
+                    <div class="channel-selection">
+                        {% for i in range(n_channels + 1) %}
+                        <div class="channel-dropdown">
+                            <label for="channel_{{ i }}">{{ i }} Channel:</label>
+                            <select id="channel_{{ i }}" name="channel_{{ i }}">
+                                <option value="Brightfield">Brightfield</option>
+                                <option value="Fluorescent">Fluorescent</option>
+                                <option value="Not Used">Not Used</option>
+                            </select>
+                        </div>
+                        {% endfor %}
                     </div>
                 </div>
-            </div>
-            <div class="control-group">
-                <label class="range-label">Frame range</label>
-                <div class="stepper-pair">
-                    <div class="stepper">
-                        <label for="frame_min">Min:</label>
-                        <input type="number" id="frame_min" name="frame_min" min="0" max="{{ n_frames }}" value="0">
-                    </div>
-                    <div class="stepper">
-                        <label for="frame_max">Max:</label>
-                        <input type="number" id="frame_max" name="frame_max" min="0" max="{{ n_frames }}" value="{{ n_frames }}">
+                <!-- Selects -->
+                <div class="control-group">
+                    <label class="range-label">Position range</label>
+                    <div class="stepper-pair">
+                        <div class="stepper">
+                            <label for="position_min">Min:</label>
+                            <input type="number" id="position_min" name="position_min" min="0" max="{{ n_positions - 1 }}" value="0">
+                        </div>
+                        <div class="stepper">
+                            <label for="position_max">Max:</label>
+                            <input type="number" id="position_max" name="position_max" min="0" max="{{ n_positions - 1 }}" value="{{ n_positions - 1 }}">
+                        </div>
                     </div>
                 </div>
+                <div class="control-group">
+                    <label class="range-label">Frame range</label>
+                    <div class="stepper-pair">
+                        <div class="stepper">
+                            <label for="frame_min">Min:</label>
+                            <input type="number" id="frame_min" name="frame_min" min="0" max="{{ n_frames }}" value="0">
+                        </div>
+                        <div class="stepper">
+                            <label for="frame_max">Max:</label>
+                            <input type="number" id="frame_max" name="frame_max" min="0" max="{{ n_frames }}" value="{{ n_frames }}">
+                        </div>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label for="expand_labels">Expand Labels:</label>
+                    <input type="checkbox" id="expand_labels" name="expand_labels" checked>
+                </div>
+                <div class="control-group">
+                    <label for="square_size">Square Size (μm):</label>
+                    <input type="number" id="square_size" name="square_size" min="1" value="30">
+                </div>
+                <div class="button-group">
+                        <button class="button" id="do_segmentation">Do Segmentation</button>
+                        <button class="button" id="do_tracking">Do Tracking</button>
+                        <button class="button" id="do_square_rois">Do Square ROIs for Position(s)</button>
+                        <button class="button">Output Directory</button>
+                </div>
             </div>
-            <div class="control-group">
-                <label for="expand_labels">Expand Labels:</label>
-                <input type="checkbox" id="expand_labels" name="expand_labels" checked>
+            <div class="plot-container">
+                <div id="brightness-plot"></div>
             </div>
-            <div class="control-group">
-                <label for="square_size">Square Size (μm):</label>
-                <input type="number" id="square_size" name="square_size" min="1" value="30">
-            </div>
-            <div class="button-group">
-                    <button class="button" id="do_segmentation">Do Segmentation</button>
-                    <button class="button" id="do_tracking">Do Tracking</button>
-                    <button class="button" id="do_square_rois">Do Square ROIs for Position(s)</button>
-                    <button class="button">Output Directory</button>
-            </div>
-
         </div>
     </div>
 </body>
@@ -294,6 +317,10 @@ document.getElementById('do_square_rois').addEventListener('click', function() {
         }
     });
 });
+
+// Plot the brightness figure
+var brightnessPlot = JSON.parse('{{ brightness_plot | safe }}');
+Plotly.newPlot('brightness-plot', brightnessPlot.data, brightnessPlot.layout);
 </script>
 
 {% endblock %}

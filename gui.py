@@ -4,8 +4,10 @@ import cv2
 import h5py
 import numpy as np
 import pandas as pd
-import bqplot.pyplot as bqplt
+import plotly.graph_objs as go
+from plotly.subplots import make_subplots
 from nd2reader import ND2Reader
+import plotly.io as pio
 
 from io import BytesIO
 import base64
@@ -67,13 +69,15 @@ class CellViewer:
 
         # Replacing widgets from the show() method:
 
-        self.brightness_figure = {'title': 'Brightness', 'type': 'figure'}
-        self.brightness_lines = {'type': 'plot', 'data': ([], [])}
-        self.brightness_cursor_line = {'type': 'vline', 'position': 0, 'colors': [self.COLOR_RED]}
+        self.brightness_figure = go.Figure()
+        self.brightness_figure.update_layout(title='Brightness')
+        self.brightness_lines = go.Scatter(x=[], y=[], mode='lines')
+        self.brightness_cursor_line = go.Scatter(x=[0,0], y=[0,1], mode='lines', line=dict(color=self.COLOR_RED))
 
-        self.area_figure = {'title': 'Area', 'type': 'figure'}
-        self.area_lines = {'type': 'plot', 'data': ([], [])}
-        self.area_cursor_line = {'type': 'vline', 'position': 0, 'colors': [self.COLOR_RED]}
+        self.area_figure = go.Figure()
+        self.area_figure.update_layout(title='Area')
+        self.area_lines = go.Scatter(x=[], y=[], mode='lines')
+        self.area_cursor_line = go.Scatter(x=[0,0], y=[0,1], mode='lines', line=dict(color=self.COLOR_RED))
 
         controls_widgets = []
 
@@ -94,8 +98,13 @@ class CellViewer:
         self.particle_dropdown = {'type': 'Dropdown'}
         self.enabled_checkbox = {'type': 'Checkbox', 'description': 'Cell Enabled', 'value': False}
 
-        self.area_figure['layout'] = {'height': '50%'}
-        self.brightness_figure['layout'] = {'height': '50%'}
+        self.area_figure.update_layout(height=300)
+        self.brightness_figure.update_layout(height=300)
+
+        self.brightness_plot = self.plotly_to_json(self.brightness_figure)
+
+    def plotly_to_json(self, fig):
+        return pio.to_json(fig)
 
     def get_positions(self):
         # Will only get positions that have the necessary files (data.h5, features.csv, tracks.csv)
@@ -166,38 +175,43 @@ class CellViewer:
             colors[len(colors)-1] = self.COLOR_ORANGE
 
         # Update brightness tracks
-        with self.brightness_lines.hold_sync():
-            self.brightness_lines.x = brightness_x
-            self.brightness_lines.y = brightness_y
-            self.brightness_lines.opacities = opacities
-            self.brightness_lines.colors = colors
+        self.brightness_figure.data = []
+        for i in range(len(brightness_x)):
+            self.brightness_figure.add_trace(go.Scatter(x=brightness_x[i], y=brightness_y[i], mode='lines',
+                                                        line=dict(color=colors[i]), opacity=opacities[i]))
+        self.brightness_figure.add_trace(self.brightness_cursor_line)
 
         # Update area tracks
-        with self.area_lines.hold_sync():
-            self.area_lines.x = area_x
-            self.area_lines.y = area_y
-            self.area_lines.opacities = opacities
-            self.area_lines.colors = colors
+        self.area_figure.data = []
+        for i in range(len(area_x)):
+            self.area_figure.add_trace(go.Scatter(x=area_x[i], y=area_y[i], mode='lines',
+                                                  line=dict(color=colors[i]), opacity=opacities[i]))
+        self.area_figure.add_trace(self.area_cursor_line)
+
+        self.brightness_plot = self.plotly_to_json(self.brightness_figure)
 
 
     def position_changed(self):
         self.data_dir = os.path.join(self.output_path,self.position[1][1])
         if self.file is not None:
             self.file.close()
+        print(self.data_dir)
         self.file = h5py.File(os.path.join(self.data_dir,'data.h5'), "r")
         self.frame_min = self.file.attrs['frame_min']
         self.frame_max = self.file.attrs['frame_max']
         self.frame = self.frame_min
 
-        self.brightness_figure = bqplt.figure(title='Brightness')
-        self.brightness_lines = bqplt.plot([],[])
-        self.brightness_cursor_line = bqplt.vline(0, colors=[self.COLOR_RED])
+        self.brightness_figure = go.Figure()
+        self.brightness_figure.update_layout(title='Brightness')
+        self.brightness_lines = go.Scatter(x=[], y=[], mode='lines')
+        self.brightness_cursor_line = go.Scatter(x=[0,0], y=[0,1], mode='lines', line=dict(color=self.COLOR_RED))
 
-        self.area_figure = bqplt.figure(title='Area')
-        self.area_lines = bqplt.plot([],[])
-        self.area_cursor_line = bqplt.vline(0, colors=[self.COLOR_RED])
+        self.area_figure = go.Figure()
+        self.area_figure.update_layout(title='Area')
+        self.area_lines = go.Scatter(x=[], y=[], mode='lines')
+        self.area_cursor_line = go.Scatter(x=[0,0], y=[0,1], mode='lines', line=dict(color=self.COLOR_RED))
 
-        self.brightness_figure.title = self.file.attrs['fl_channel_names'][0]
+        self.brightness_figure.update_layout(title=self.file.attrs['fl_channel_names'][0])
 
         # set Brightnesses names for plots file_handle.attrs['fl_channel_names']
 
@@ -227,16 +241,11 @@ class CellViewer:
 
         self.update_cursors()
 
-        with self.brightness_lines.hold_sync():
-            self.brightness_lines.colors = colors
-            self.brightness_lines.opacities = opacities
-            self.brightness_lines.stroke_width = 3
+        self.brightness_figure.add_trace(self.brightness_lines)
+        self.brightness_figure.add_trace(self.brightness_cursor_line)
 
-        with self.area_lines.hold_sync():
-            self.area_lines.colors = colors
-            self.area_lines.opacities = opacities
-            self.area_lines.stroke_width = 3
-
+        self.area_figure.add_trace(self.area_lines)
+        self.area_figure.add_trace(self.area_cursor_line)
 
         self.particle = None
 
@@ -265,6 +274,7 @@ class CellViewer:
         else:
             self.frame_changed()
 
+        self.brightness_plot = self.plotly_to_json(self.brightness_figure)
     # enable / disable current particle and save tracks to file
     def particle_enabled_changed(self):
         self.all_tracks.loc[self.all_tracks['particle'] == self.particle, 'enabled'] = self.particle_enabled
@@ -299,37 +309,35 @@ class CellViewer:
         self.update_image()
 
     def particle_dropdown_changed(self, change):
-        if change.new is not self.particle:
-            self.particle = change.new
+        if change['new'] is not self.particle:
+            self.particle = change['new']
             self.particle_changed()
 
     def position_dropdown_changed(self, change):
-        if change.new is not self.position:
-            self.position = change.new
+        if change['new'] is not self.position:
+            self.position = change['new']
             self.position_changed()
 
     def frame_slider_changed(self, change):
         if self.frame_change_suppress:
             return
-        if change.new is not self.frame:
-            self.frame = change.new
+        if change['new'] is not self.frame:
+            self.frame = change['new']
             self.frame_changed()
 
     def max_pixel_slider_changed(self, change):
-        if change.new is not self.frame:
-            self.max_pixel_value = change.new
+        if change['new'] is not self.frame:
+            self.max_pixel_value = change['new']
             self.max_pixel_value_changed()
 
     def update_cursors(self):
         # Move Brightness Cursor
-        with self.brightness_cursor_line.hold_sync():
-            self.brightness_cursor_line.x = [self.frame,self.frame]
-            self.brightness_cursor_line.y = [0,1]
+        self.brightness_cursor_line.x = [self.frame, self.frame]
+        self.brightness_cursor_line.y = [0, 1]
 
         # Move Area Cursor
-        with self.area_cursor_line.hold_sync():
-            self.area_cursor_line.x = [self.frame,self.frame]
-            self.area_cursor_line.y = [0,1]
+        self.area_cursor_line.x = [self.frame, self.frame]
+        self.area_cursor_line.y = [0, 1]
 
     def frame_changed(self):
         self.update_cursors()
@@ -346,13 +354,13 @@ class CellViewer:
         self.update_image()
 
     def channel_slider_changed(self, change):
-        if change.new is not self.channel:
-            self.channel = change.new
+        if change['new'] is not self.channel:
+            self.channel = change['new']
             self.channel_changed()
 
     def enabled_checkbox_changed(self, change):
-        if change.new is not self.particle_enabled:
-            self.particle_enabled = change.new
+        if change['new'] is not self.particle_enabled:
+            self.particle_enabled = change['new']
             self.particle_enabled_changed()
 
     def adjust_image(self, image, max_value):
@@ -363,7 +371,7 @@ class CellViewer:
         return img
 
     def get_channel_image(self):
-        img = self.nd2.get_frame_2D(v=int(self.position[1][0]),c=self.channel,t=self.frame)[self.x:self.x+2*self.image_size,self.y:self.y+2*self.image_size]
+        img = self.nd2.get_frame_2D(v=int(self.position[0]),c=self.channel,t=self.frame)[self.x:self.x+2*self.image_size,self.y:self.y+2*self.image_size]
 
         # There seems to be an issue with the arguments. Apparently v should be the position, but it's not working.
         # Instead, v seems to be the input for the frame.
@@ -477,29 +485,29 @@ class CellViewer:
 
         if event['key'] == 'ArrowLeft':
             if ctrl:
-                self.frame_slider.value = max(self.frame_min, self.frame - 10)
+                self.frame_slider['value'] = max(self.frame_min, self.frame - 10)
             else:
-                self.frame_slider.value = max(self.frame_min, self.frame - 1)
+                self.frame_slider['value'] = max(self.frame_min, self.frame - 1)
         elif event['key'] == 'ArrowRight':
             if ctrl:
-                self.frame_slider.value = min(self.frame_max, self.frame + 10)
+                self.frame_slider['value'] = min(self.frame_max, self.frame + 10)
             else:
-                self.frame_slider.value = min(self.frame_max, self.frame + 1)
+                self.frame_slider['value'] = min(self.frame_max, self.frame + 1)
         elif event['key'] == 'c':
-            channel = self.channel_slider.value + 1
+            channel = self.channel_slider['value'] + 1
             if channel > self.channel_max:
                 channel = self.channel_min
-            self.channel_slider.value = channel
+            self.channel_slider['value'] = channel
         elif event['key'] == 'ArrowUp':
             index = self.particle_index()
             if index < len(self.all_particles) - 1:
-                self.particle_dropdown.value = self.all_particles[index+1]
+                self.particle_dropdown['value'] = self.all_particles[index+1]
         elif event['key'] == 'ArrowDown':
             index = self.particle_index()
             if index > 0:
-                self.particle_dropdown.value = self.all_particles[index-1]
+                self.particle_dropdown['value'] = self.all_particles[index-1]
         elif event['key'] == 'Enter' and ctrl:
-            self.enabled_checkbox.value = not self.enabled_checkbox.value
+            self.enabled_checkbox['value'] = not self.enabled_checkbox['value']
 
     def handle_keyup(self, event):
         self.key_down[event['key']] = False
@@ -511,13 +519,15 @@ class CellViewer:
         self.image = widgets.Image(format='jpg', layout=widgets.Layout(width='50%', height='auto', object_fit='contain'))
 
         # Plotting
-        self.brightness_figure = bqplt.figure(title='Brightness')
-        self.brightness_lines = bqplt.plot([],[])
-        self.brightness_cursor_line = bqplt.vline(0, colors=[self.COLOR_RED])
+        self.brightness_figure = go.Figure()
+        self.brightness_figure.update_layout(title='Brightness')
+        self.brightness_lines = go.Scatter(x=[], y=[], mode='lines')
+        self.brightness_cursor_line = go.Scatter(x=[0,0], y=[0,1], mode='lines', line=dict(color=self.COLOR_RED))
 
-        self.area_figure = bqplt.figure(title='Area')
-        self.area_lines = bqplt.plot([],[])
-        self.area_cursor_line = bqplt.vline(0, colors=[self.COLOR_RED])
+        self.area_figure = go.Figure()
+        self.area_figure.update_layout(title='Area')
+        self.area_lines = go.Scatter(x=[], y=[], mode='lines')
+        self.area_cursor_line = go.Scatter(x=[0,0], y=[0,1], mode='lines', line=dict(color=self.COLOR_RED))
 
         controls_widgets = []
 
@@ -556,8 +566,8 @@ class CellViewer:
 
         controls_box = widgets.VBox(controls_widgets)
 
-        self.area_figure.layout.height = '50%'
-        self.brightness_figure.layout.height = '50%'
+        self.area_figure.update_layout(height=300)
+        self.brightness_figure.update_layout(height=300)
         plots_box = widgets.VBox([self.area_figure,self.brightness_figure], layout=widgets.Layout(width='50%'))
 
 

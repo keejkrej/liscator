@@ -48,8 +48,14 @@
                 <button onclick="submitPaths('view')" class="button mb-4">
                     View
                 </button>
-                <button onclick="submitPaths('analysis')" class="button">
+                <button onclick="submitPaths('analysis')" class="button mb-4">
                     Analysis
+                </button>
+                <button onclick="setDefaultPaths('local')" class="button mb-4">
+                    Local Default
+                </button>
+                <button onclick="setDefaultPaths('remote')" class="button">
+                    Remote Default
                 </button>
             </div>
         </div>
@@ -92,4 +98,23 @@
 </style>
 
 <script src="{{ url_for('static', filename='selection.js') }}"></script>
+<script>
+    function setDefaultPaths(type) {
+        if (type === "local") {
+            document.getElementById("nd2CurrentPath").value =
+                "/Volumes/ag-moonraedler/Judith/FFL/Data/Transfections/TF72/230321_TF72_HuH7.nd2";
+            document.getElementById("outCurrentPath").value =
+                "/Volumes/ag-moonraedler/projects/FlowCellProject/Liscator/";
+        } else if (type === "remote") {
+            document.getElementById("nd2CurrentPath").value =
+                "/project/ag-moonraedler/Judith/FFL/Data/Transfections/TF72/230321_TF72_HuH7.nd2";
+            document.getElementById("outCurrentPath").value =
+                "/project/ag-moonraedler/projects/FlowCellProject/Liscator/";
+        }
+        document.getElementById("nd2SelectedItem").textContent =
+            "Selected: " + document.getElementById("nd2CurrentPath").value;
+        document.getElementById("outSelectedItem").textContent =
+            "Selected: " + document.getElementById("outCurrentPath").value;
+    }
+</script>
 {% endblock %}

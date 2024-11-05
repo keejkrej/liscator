@@ -1,5 +1,4 @@
 // File browser functionality
-
 function createFileBrowser(
   currentPathId,
   upDirId,
@@ -27,6 +26,15 @@ function createFileBrowser(
 
       currentPath.value = data.path;
       fileList.innerHTML = "";
+
+      // Sort items alphabetically
+      data.items.sort((a, b) => {
+        // First, sort directories before files
+        if (a.isDirectory && !b.isDirectory) return -1;
+        if (!a.isDirectory && b.isDirectory) return 1;
+        // Then sort alphabetically by name
+        return a.name.localeCompare(b.name);
+      });
 
       data.items.forEach((item) => {
         const div = document.createElement("div");
