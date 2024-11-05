@@ -812,23 +812,38 @@ def segment_positions(nd2_path: str, out_dir: str, pos: list, seg_channel: int, 
 
     print("Done")
 
-def background_spline(image,img_mask,countX,countY,overlap):
+def background_spline(image, img_mask, countX, countY, overlap):
     """
-    It creates a grid of the image with support pillars. Then you get the mean, a spline and substract it from the image.
+    Creates a background model using a grid of sampling points and spline interpolation.
 
-    It is based on the Schwarzfischer paper (not exactly like the one applied there, but inspired on it)
+    Used for background correction of microscopy images by modeling systematic
+    illumination variations. Part of the pipeline for processing fluorescence data.
+
+    Parameters:
+    image (np.ndarray): Input microscopy image
+    img_mask (np.ndarray): Binary mask of regions to exclude (e.g. cells)
+    countX (int): Number of grid points in X direction
+    countY (int): Number of grid points in Y direction
+    overlap (float): Overlap between grid windows (0-1)
+
+    Returns:
+    np.ndarray: Interpolated background map same size as input image
     """
+    # Get image dimensions
     h,w = image.shape
 
-
+    # Calculate size of sampling windows based on grid density and overlap
     sizeX = int(w/((countX - (countX-1)*overlap)*2))
     sizeY = int(h/((countY - (countY-1)*overlap)*2))
 
+    # Create grid points for sampling background
     pointsX = np.linspace(sizeX,w-(sizeX),countX).astype(int)
     pointsY = np.linspace(sizeY,h-(sizeY),countY).astype(int)
 
+    # Create masked array to ignore foreground objects
     masked_img = np.ma.masked_array(image, mask=img_mask)
 
+    # Sample background at each grid point
     pos = []
     vals = []
     for ix in range(len(pointsX)):
@@ -836,21 +851,25 @@ def background_spline(image,img_mask,countX,countY,overlap):
             x = pointsX[ix]
             y = pointsY[iy]
 
+            # Get sampling window boundaries
             x1,x2 = max(0,x-sizeX),min(w-1,x+sizeX)
             y1,y2 = max(0,y-sizeY),min(h-1,y+sizeY)
 
+            # Extract window and calculate statistics
             sub_image = masked_img[y1:y2,x1:x2]
-
             vals.append([np.ma.mean(sub_image),np.ma.median(sub_image),np.ma.var(sub_image)])
             pos.append([x,y,ix,iy])
 
+    # Convert to numpy arrays
     vals = np.array(vals)
     pos = np.array(pos)
 
+    # Create support points for spline interpolation using median values
     fit_support = np.empty((countX, countY))
     for i in range(len(pos)):
         fit_support[pos[i,2],pos[i,3]] = vals[i,1]
 
+    # Interpolate background using bicubic spline
     bg_spline = scipy.interpolate.RectBivariateSpline(x=pointsX, y=pointsY, z=fit_support)
     return bg_spline(x=range(w), y=range(h)).T
 
