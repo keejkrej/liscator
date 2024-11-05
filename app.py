@@ -27,7 +27,8 @@ class App:
             if not nd2_path or not out_path:
                 return jsonify({'error': 'Both ND2 path and output path must be selected'}), 400
 
-            self.cell_viewer = CellViewer(nd2_path=nd2_path, output_path=out_path)
+            init_type = 'view' if redirect_to == 'view' else 'analysis'
+            self.cell_viewer = CellViewer(nd2_path=nd2_path, output_path=out_path, init_type=init_type)
             self.cell_viewer.nd2_path = nd2_path
             self.cell_viewer.output_path = out_path
 
@@ -132,8 +133,9 @@ class App:
         def analysis():
             if self.cell_viewer is None:
                 return redirect(url_for('index'))
+            n_positions = len(self.cell_viewer.nd2.metadata['fields_of_view'])+1
             return render_template('analysis.html',
-                                   n_positions=len(self.cell_viewer.positions),
+                                   n_positions=n_positions,
                                    n_channels=self.cell_viewer.channel_max,
                                    n_frames=self.cell_viewer.frame_max)
 

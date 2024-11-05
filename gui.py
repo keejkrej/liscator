@@ -28,8 +28,7 @@ def numpy_to_b64_string(image):
 
 class CellViewer:
 
-    def __init__(self, nd2_path, output_path):
-
+    def __init__(self, nd2_path, output_path, init_type='view'):
         self.output_path = pathlib.Path(output_path)
 
         self.output_path = output_path
@@ -43,15 +42,16 @@ class CellViewer:
         self.OPACITY_DEFAULT = 0.5
         self.OPACITY_SELECTED = 1
 
-
         self.frame_change_suppress = False
 
         self.particle = None
         self.position = None
 
-        # parse valid positions
-        self.get_positions()
-        #print(self.positions)
+        # Only run position-related initialization if init_type is 'view'
+        if init_type == 'view':
+            # parse valid positions
+            self.get_positions()
+            #print(self.positions)
 
         self.frame_min = 0
         self.frame_max = self.nd2.metadata['num_frames']-1
@@ -81,22 +81,23 @@ class CellViewer:
 
         controls_widgets = []
 
-        self.position_options = []
-        for pos in self.positions:
-            self.position_options.append((str(pos[0]), pos))
-        # Example: if self.positions is [(0, 'XY00'), (1, 'XY01')]
-        # then position_options = [('0', (0, 'XY00')), ('1', (1, 'XY01'))]
-        # position_options is a list of tuples, where the first element is a string and the second element is a tuple
+        if init_type == 'view':
+            self.position_options = []
+            for pos in self.positions:
+                self.position_options.append((str(pos[0]), pos))
+            # Example: if self.positions is [(0, 'XY00'), (1, 'XY01')]
+            # then position_options = [('0', (0, 'XY00')), ('1', (1, 'XY01'))]
+            # position_options is a list of tuples, where the first element is a string and the second element is a tuple
 
-        self.position = self.position_options[0]
+            self.position = self.position_options[0]
 
-        # Replacing widgets.Dropdown, widgets.IntSlider, and widgets.Checkbox with dictionaries
-        self.position_dropdown = {'type': 'Dropdown', 'description': 'Position:', 'options': self.position_options}
-        self.max_value_slider = {'type': 'IntSlider', 'min': 0, 'max': np.iinfo(np.uint16).max, 'description': 'Max Pixel Value (Contrast)', 'value': self.max_pixel_value}
-        self.frame_slider = {'type': 'IntSlider', 'description': 'Frame', 'value': self.frame}
-        self.channel_slider = {'type': 'IntSlider', 'min': self.channel_min, 'max': self.channel_max, 'description': 'Channel', 'value': self.channel}
-        self.particle_dropdown = {'type': 'Dropdown'}
-        self.enabled_checkbox = {'type': 'Checkbox', 'description': 'Cell Enabled', 'value': False}
+            # Replacing widgets.Dropdown, widgets.IntSlider, and widgets.Checkbox with dictionaries
+            self.position_dropdown = {'type': 'Dropdown', 'description': 'Position:', 'options': self.position_options}
+            self.max_value_slider = {'type': 'IntSlider', 'min': 0, 'max': np.iinfo(np.uint16).max, 'description': 'Max Pixel Value (Contrast)', 'value': self.max_pixel_value}
+            self.frame_slider = {'type': 'IntSlider', 'description': 'Frame', 'value': self.frame}
+            self.channel_slider = {'type': 'IntSlider', 'min': self.channel_min, 'max': self.channel_max, 'description': 'Channel', 'value': self.channel}
+            self.particle_dropdown = {'type': 'Dropdown'}
+            self.enabled_checkbox = {'type': 'Checkbox', 'description': 'Cell Enabled', 'value': False}
 
         self.area_figure.update_layout(height=300)
         self.brightness_figure.update_layout(height=300)
