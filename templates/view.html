@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% from "layout_analysis.html" import analysis_controls, analysis_scripts %}
 {% block styles %}
 <title>LISCA: Visual Control</title>
 <style>
@@ -175,63 +176,7 @@
                     <input type="range" id="particle_slider" name="particle_slider" min="0" max="{{ all_particles_len - 1 }}" value="{{ current_particle_index }}">
                     <span id="particle_value">{{ current_particle_index }}/ {{ all_particles_len - 1 }}</span>
                 </div>
-                <!-- Channel selection -->
-                <div class="control-group">
-                    <label class="range-label">Channel selection</label>
-                    <div class="channel-selection">
-                        {% for i in range(n_channels + 1) %}
-                        <div class="channel-dropdown">
-                            <label for="channel_{{ i }}">{{ i }} Channel:</label>
-                            <select id="channel_{{ i }}" name="channel_{{ i }}">
-                                <option value="Brightfield">Brightfield</option>
-                                <option value="Fluorescent">Fluorescent</option>
-                                <option value="Not Used">Not Used</option>
-                            </select>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                <!-- Selects -->
-                <div class="control-group">
-                    <label class="range-label">Position range</label>
-                    <div class="stepper-pair">
-                        <div class="stepper">
-                            <label for="position_min">Min:</label>
-                            <input type="number" id="position_min" name="position_min" min="0" max="{{ n_positions - 1 }}" value="0">
-                        </div>
-                        <div class="stepper">
-                            <label for="position_max">Max:</label>
-                            <input type="number" id="position_max" name="position_max" min="0" max="{{ n_positions - 1 }}" value="{{ n_positions - 1 }}">
-                        </div>
-                    </div>
-                </div>
-                <div class="control-group">
-                    <label class="range-label">Frame range</label>
-                    <div class="stepper-pair">
-                        <div class="stepper">
-                            <label for="frame_min">Min:</label>
-                            <input type="number" id="frame_min" name="frame_min" min="0" max="{{ n_frames }}" value="0">
-                        </div>
-                        <div class="stepper">
-                            <label for="frame_max">Max:</label>
-                            <input type="number" id="frame_max" name="frame_max" min="0" max="{{ n_frames }}" value="{{ n_frames }}">
-                        </div>
-                    </div>
-                </div>
-                <div class="control-group">
-                    <label for="expand_labels">Expand Labels:</label>
-                    <input type="checkbox" id="expand_labels" name="expand_labels" checked>
-                </div>
-                <div class="control-group">
-                    <label for="square_size">Square Size (μm):</label>
-                    <input type="number" id="square_size" name="square_size" min="1" value="30">
-                </div>
-                <div class="button-group">
-                        <button class="button" id="do_segmentation">Do Segmentation</button>
-                        <button class="button" id="do_tracking">Do Tracking</button>
-                        <button class="button" id="do_square_rois">Do Square ROIs for Position(s)</button>
-                        <button class="button">Output Directory</button>
-                </div>
+                {{ analysis_controls(n_channels=n_channels, n_positions=n_positions, n_frames=n_frames) }}
             </div>
             <div class="plot-container">
                 <div id="brightness-plot"></div>
@@ -243,81 +188,9 @@
 <script src="{{ url_for('static', filename='api.js') }}"></script>
 <script src="{{ url_for('static', filename='keyboard_shortcuts.js') }}"></script>
 
+{{ analysis_scripts(n_channels=n_channels, n_positions=n_positions, n_frames=n_frames) }}
+
 <script>
-document.getElementById('do_segmentation').addEventListener('click', function() {
-    const data = {
-        position_min: parseInt(document.getElementById('position_min').value),
-        position_max: parseInt(document.getElementById('position_max').value),
-        frame_min: parseInt(document.getElementById('frame_min').value),
-        frame_max: parseInt(document.getElementById('frame_max').value),
-    };
-
-    for (let i = 0; i <= {{ n_channels }}; i++) {
-        data[`channel_${i}`] = document.getElementById(`channel_${i}`).value;
-    }
-
-    fetch('/do_segmentation', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-    }).then(response => response.json())
-    .then(data => {
-        if (data.status === 'success') {
-            alert('Segmentation completed successfully!');
-        } else {
-            alert('Segmentation failed. Please check the console for more information.');
-        }
-    });
-});
-
-document.getElementById('do_tracking').addEventListener('click', function() {
-    const data = {
-        position_min: parseInt(document.getElementById('position_min').value),
-        position_max: parseInt(document.getElementById('position_max').value),
-        expand_labels: document.getElementById('expand_labels').checked,
-    };
-
-    fetch('/do_tracking', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-    }).then(response => response.json())
-    .then(data => {
-        if (data.status === 'success') {
-            alert('Tracking completed successfully!');
-        } else {
-            alert('Tracking failed. Please check the console for more information.');
-        }
-    });
-});
-
-document.getElementById('do_square_rois').addEventListener('click', function() {
-    const data = {
-        position_min: parseInt(document.getElementById('position_min').value),
-        position_max: parseInt(document.getElementById('position_max').value),
-        square_size: parseInt(document.getElementById('square_size').value),
-    };
-
-    fetch('/do_square_rois', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-    }).then(response => response.json())
-    .then(data => {
-        if (data.status === 'success') {
-            alert('Square ROIs processing completed successfully!');
-        } else {
-            alert('Square ROIs processing failed. Please check the console for more information.');
-        }
-    });
-});
-
 // Plot the brightness figure
 var brightnessPlot = JSON.parse('{{ brightness_plot | safe }}');
 Plotly.newPlot('brightness-plot', brightnessPlot.data, brightnessPlot.layout);
