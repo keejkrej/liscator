@@ -713,8 +713,25 @@ def segment_positions(nd2_path: str, out_dir: str, pos: list, seg_channel: int, 
         return
 
     fl_channel_names = [nd2.metadata['channels'][c] for c in fl_channels]
+        
+    try:
+        # Check and calculate padding
+        max_field = max(nd2.metadata['fields_of_view'])
+        if max_field > 0:
+            padding = int(np.ceil(np.log10(max_field)))
+        else:
+            # Save metadata to a text file
+            with open("metadata_output.txt", "w") as file:
+                file.write(str(nd2.metadata))    
+            
+            print("Warning: fields_of_view contains zero or negative values.")
+            padding = 0  # or any default you prefer
+    except KeyError:
+        print("Error: 'fields_of_view' key not found in metadata.")
+        padding = 0  # or any default you prefer
+    
 
-    padding = int(np.ceil(np.log10(max(nd2.metadata['fields_of_view']))))
+    
     frames = list(nd2.metadata['frames'])
 
     if frame_min is not None:
