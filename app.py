@@ -83,8 +83,11 @@ class App:
 
             self.cell_viewer.get_channel_image()
             self.cell_viewer.draw_outlines()
-            return jsonify({'channel_image': self.cell_viewer.return_image(),
-                            'brightness_plot': self.cell_viewer.brightness_plot})
+            return jsonify({
+                'channel_image': self.cell_viewer.return_image(),
+                'brightness_plot': self.cell_viewer.brightness_plot,
+                'all_particles_len': self.cell_viewer.all_particles_len
+            })
 
         @self.app.route('/do_segmentation', methods=['POST'])
         def do_segmentation():
