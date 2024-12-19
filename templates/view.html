@@ -149,7 +149,6 @@
 {% endblock %}
 
 {% block body %}
-
 <body>
     <div class="container">
         <img id="channel_image" src="data:image/jpeg;base64,{{ channel_image }}">
@@ -173,8 +172,15 @@
                 </div>
                 <div class="control-group">
                     <label for="particle_slider">Particle: </label>
-                    <input type="range" id="particle_slider" name="particle_slider" min="0" max="{{ all_particles_len - 1 }}" value="{{ current_particle_index }}">
-                    <span id="particle_value">{{ current_particle_index }}/ {{ all_particles_len - 1 }}</span>
+                    <input type="range" id="particle_slider" name="particle_slider" min="1" max="{{ all_particles_len}}" value="{{ current_particle_index }}">
+                    <span id="particle_value">{{ current_particle_index }}/ {{ all_particles_len}}</span>
+                </div>
+                <div class="control-group">
+                    <label for="particle_enabled">
+                        <input type="checkbox" id="particle_enabled" name="particle_enabled"
+                               {% if current_particle_index not in disabled_particles %}checked{% endif %}>
+                        Cell Enabled
+                    </label>
                 </div>
                 {{ analysis_controls(n_channels=n_channels, n_positions=n_positions, n_frames=n_frames) }}
             </div>
@@ -194,6 +200,13 @@
 // Plot the brightness figure
 var brightnessPlot = JSON.parse('{{ brightness_plot | safe }}');
 Plotly.newPlot('brightness-plot', brightnessPlot.data, brightnessPlot.layout);
+
+// Initialize the checkbox state based on disabled_particles
+document.addEventListener('DOMContentLoaded', function() {
+    const disabledParticles = {{ disabled_particles|tojson|safe }};
+    const currentParticle = {{ current_particle_index }};
+    updateParticleCheckbox(currentParticle, disabledParticles);
+});
 </script>
 
 {% endblock %}

@@ -21,10 +21,19 @@ function updateSliderAndText(slider, value) {
 // Add keyboard event listener for slider controls
 // Shift + Arrow keys: Position and Channel
 // Alt + Arrow keys: Timeframe and Particle
+// Space: Toggle particle enabled/disabled
 document.addEventListener("keydown", (event) => {
   let updateNeeded = false;
 
-  if (event.shiftKey) {
+  if (event.code === "Space") {
+    event.preventDefault();
+    const checkbox = document.getElementById("particle_enabled");
+    if (checkbox) {
+      checkbox.checked = !checkbox.checked;
+      checkbox.dispatchEvent(new Event("change"));
+      updateNeeded = true;
+    }
+  } else if (event.shiftKey) {
     switch (event.key) {
       case "ArrowUp":
         event.preventDefault();

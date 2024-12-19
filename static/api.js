@@ -9,6 +9,18 @@ positionSlider.addEventListener("input", updateImageAndPlot);
 channelSlider.addEventListener("input", updateImage);
 timeframeSlider.addEventListener("input", updateImage);
 particleSlider.addEventListener("input", updateImageAndPlot);
+const particleEnabledCheckbox = document.getElementById("particle_enabled");
+
+// Set default state of checkbox to checked
+document.addEventListener("DOMContentLoaded", function () {
+  if (particleEnabledCheckbox) {
+    particleEnabledCheckbox.checked = true;
+  }
+});
+
+particleEnabledCheckbox.addEventListener("change", function () {
+  updateParticleEnabled(this.checked);
+});
 
 /**
  * Updates both the image and brightness plot
@@ -58,6 +70,32 @@ function updateBrightnessPlot() {
         );
       }
     });
+}
+
+function updateParticleEnabled(enabled) {
+  fetch("/update_particle_enabled", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      enabled: enabled,
+    }),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.channel_image) {
+        updateImageDisplay(data.channel_image);
+      }
+      if (data.brightness_plot) {
+        Plotly.react(
+          "brightness-plot",
+          JSON.parse(data.brightness_plot).data,
+          JSON.parse(data.brightness_plot).layout,
+        );
+      }
+    })
+    .catch((error) => console.error("Error:", error));
 }
 
 /**
@@ -117,15 +155,24 @@ function fetchImageUpdate(url, params) {
       updateImageDisplay(data.channel_image);
       if (data.all_particles_len !== undefined) {
         const particleSlider = document.getElementById("particle_slider");
-        particleSlider.max = data.all_particles_len - 1;
+        particleSlider.max = data.all_particles_len;
         document.getElementById("particle_value").innerHTML =
-          `${particleSlider.value}/${data.all_particles_len - 1}`;
+          `${particleSlider.value}/${data.all_particles_len}`;
       }
       if (data.brightness_plot) {
         Plotly.react(
           "brightness-plot",
           JSON.parse(data.brightness_plot).data,
           JSON.parse(data.brightness_plot).layout,
+        );
+      }
+      // Update checkbox state based on disabled particles
+      if (
+        data.current_particle !== undefined &&
+        data.disabled_particles !== undefined
+      ) {
+        particleEnabledCheckbox.checked = !data.disabled_particles.includes(
+          data.current_particle,
         );
       }
     });
