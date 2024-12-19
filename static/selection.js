@@ -1,4 +1,17 @@
-// File browser functionality
+/**
+ * selection.js
+ * Implements file browser functionality for selecting input and output directories
+ */
+
+/**
+ * Creates a file browser instance
+ * @param {string} currentPathId - ID of current path element
+ * @param {string} upDirId - ID of up directory button
+ * @param {string} selectFolderId - ID of select folder button
+ * @param {string} fileListId - ID of file list container
+ * @param {string} selectedItemId - ID of selected item display
+ * @returns {Object} File browser controller object
+ */
 function createFileBrowser(
   currentPathId,
   upDirId,
@@ -12,6 +25,10 @@ function createFileBrowser(
   const fileList = document.getElementById(fileListId);
   const selectedItem = document.getElementById(selectedItemId);
 
+  /**
+   * Loads and displays the contents of a directory
+   * @param {string} path - Path to load
+   */
   async function loadDirectory(path) {
     try {
       const response = await fetch(
@@ -66,12 +83,14 @@ function createFileBrowser(
     }
   }
 
+  // Handle navigation to parent directory
   upDir.onclick = () => {
     const parentPath =
       currentPath.value.split("/").slice(0, -1).join("/") || "/";
     loadDirectory(parentPath);
   };
 
+  // Handle folder selection
   selectFolder.onclick = () => {
     selectedItem.textContent = `Selected Folder: ${currentPath.value}`;
   };
@@ -98,7 +117,10 @@ const outBrowser = createFileBrowser(
   "outSelectedItem",
 );
 
-// Function to submit selected paths
+/**
+ * Submits selected paths to the server
+ * @param {string} destination - Redirect destination after submission
+ */
 async function submitPaths(destination) {
   const nd2Path =
     document.getElementById("nd2SelectedItem").textContent.split(": ")[1] ||

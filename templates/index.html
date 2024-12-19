@@ -102,14 +102,14 @@
     function setDefaultPaths(type) {
         if (type === "local") {
             document.getElementById("nd2CurrentPath").value =
-                "/Volumes/ag-moonraedler/Judith/FFL/Data/Transfections/TF72/230321_TF72_HuH7.nd2";
+                "/Volumes//ag-moonraedler/Gerlinde/Schaufel/für Jose/20200715_PhotoPatt_A549HuH7_Trilink.nd2";
             document.getElementById("outCurrentPath").value =
-                "/Volumes/ag-moonraedler/projects/FlowCellProject/Liscator/";
+                "/Volumes/ag-moonraedler/projects/Liscator/analysed_output_folders/20200715_PhotoPatt_A549HuH7_Trilink/";
         } else if (type === "remote") {
             document.getElementById("nd2CurrentPath").value =
                 "/project/ag-moonraedler/Judith/FFL/Data/Transfections/TF72/230321_TF72_HuH7.nd2";
             document.getElementById("outCurrentPath").value =
-                "/project/ag-moonraedler/projects/FlowCellProject/Liscator/";
+                "/project/ag-moonraedler/projects/FlowCellProject/PyamaSimon/";
         }
         document.getElementById("nd2SelectedItem").textContent =
             "Selected: " + document.getElementById("nd2CurrentPath").value;

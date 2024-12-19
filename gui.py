@@ -17,6 +17,14 @@ import pathlib
 import warnings
 warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 
+
+def are_all_enabled(group):
+    """
+    Check if all values in the group are equal to 1.
+    Returns True if all values are 1, False otherwise.
+    """
+    return (group == 1).all()
+
 def numpy_to_b64_string(image):
     rawBytes = BytesIO()
     im = Image.fromarray(image)
@@ -28,8 +36,7 @@ def numpy_to_b64_string(image):
 
 class CellViewer:
 
-    def __init__(self, nd2_path, output_path):
-
+    def __init__(self, nd2_path, output_path, init_type='view'):
         self.output_path = pathlib.Path(output_path)
 
         self.output_path = output_path
@@ -43,15 +50,18 @@ class CellViewer:
         self.OPACITY_DEFAULT = 0.5
         self.OPACITY_SELECTED = 1
 
-
         self.frame_change_suppress = False
 
         self.particle = None
         self.position = None
+        self.key_down = {}
+        self.disabled_particles = []
 
-        # parse valid positions
-        self.get_positions()
-        #print(self.positions)
+        # Only run position-related initialization if init_type is 'view'
+        if init_type == 'view':
+            # parse valid positions
+            self.get_positions()
+            #print(self.positions)
 
         self.frame_min = 0
         self.frame_max = self.nd2.metadata['num_frames']-1
@@ -81,22 +91,23 @@ class CellViewer:
 
         controls_widgets = []
 
-        self.position_options = []
-        for pos in self.positions:
-            self.position_options.append((str(pos[0]), pos))
-        # Example: if self.positions is [(0, 'XY00'), (1, 'XY01')]
-        # then position_options = [('0', (0, 'XY00')), ('1', (1, 'XY01'))]
-        # position_options is a list of tuples, where the first element is a string and the second element is a tuple
+        if init_type == 'view':
+            self.position_options = []
+            for pos in self.positions:
+                self.position_options.append((str(pos[0]), pos))
+            # Example: if self.positions is [(0, 'XY00'), (1, 'XY01')]
+            # then position_options = [('0', (0, 'XY00')), ('1', (1, 'XY01'))]
+            # position_options is a list of tuples, where the first element is a string and the second element is a tuple
 
-        self.position = self.position_options[0]
+            self.position = self.position_options[0]
 
-        # Replacing widgets.Dropdown, widgets.IntSlider, and widgets.Checkbox with dictionaries
-        self.position_dropdown = {'type': 'Dropdown', 'description': 'Position:', 'options': self.position_options}
-        self.max_value_slider = {'type': 'IntSlider', 'min': 0, 'max': np.iinfo(np.uint16).max, 'description': 'Max Pixel Value (Contrast)', 'value': self.max_pixel_value}
-        self.frame_slider = {'type': 'IntSlider', 'description': 'Frame', 'value': self.frame}
-        self.channel_slider = {'type': 'IntSlider', 'min': self.channel_min, 'max': self.channel_max, 'description': 'Channel', 'value': self.channel}
-        self.particle_dropdown = {'type': 'Dropdown'}
-        self.enabled_checkbox = {'type': 'Checkbox', 'description': 'Cell Enabled', 'value': False}
+            # Replacing widgets.Dropdown, widgets.IntSlider, and widgets.Checkbox with dictionaries
+            self.position_dropdown = {'type': 'Dropdown', 'description': 'Position:', 'options': self.position_options}
+            self.max_value_slider = {'type': 'IntSlider', 'min': 0, 'max': np.iinfo(np.uint16).max, 'description': 'Max Pixel Value (Contrast)', 'value': self.max_pixel_value}
+            self.frame_slider = {'type': 'IntSlider', 'description': 'Frame', 'value': self.frame}
+            self.channel_slider = {'type': 'IntSlider', 'min': self.channel_min, 'max': self.channel_max, 'description': 'Channel', 'value': self.channel}
+            self.particle_dropdown = {'type': 'Dropdown'}
+            self.enabled_checkbox = {'type': 'Checkbox', 'description': 'Cell Enabled', 'value': False}
 
         self.area_figure.update_layout(height=300)
         self.brightness_figure.update_layout(height=300)
@@ -142,26 +153,48 @@ class CellViewer:
 
     def update_plots(self):
         particle_index = self.particle_index()
-        disabled_particles = self.all_tracks[self.all_tracks['enabled'] == False]['particle'].unique()
+        self.disabled_particles = list(self.all_tracks[self.all_tracks['enabled'] != 1]['particle'].unique())
 
-        print("disabled:", disabled_particles)
+        print("disabled:", self.disabled_particles)
 
         # boolean list [True, False] => enabled, disabled
-        particle_states = list(self.all_tracks.groupby(['particle'])['enabled'].all())
+        # - True means all records for that particle have enabled=1
+        # - False means at least one record other than 1 (as in 0 or False)
+        particle_states = list(self.all_tracks.groupby(['particle'])['enabled'].apply(are_all_enabled))
 
-        # all enabled areas except selected particle
-        area_x = [self.area_x[i] for i in range(self.all_particles_len) if particle_states[i] == True and i != particle_index]
-        area_y = [self.area_y[i] for i in range(self.all_particles_len) if particle_states[i] == True and i != particle_index]
+        # Initialize empty lists for area data
+        area_x = []
+        area_y = []
 
-        # selected area
+        # Add enabled areas except selected particle
+        for i in range(self.all_particles_len):
+            if particle_states[i] == True and i != particle_index:
+                try:
+                    area_x.append(self.area_x[i])
+                    area_y.append(self.area_y[i])
+                except IndexError:
+                    print("IndexError at particle", i)
+
+        # print("area_x shape and length:", (area_x[0]).shape, len(area_x))
+
+        # Add the selected particle area
         area_x.append(self.area_x[particle_index])
         area_y.append(self.area_y[particle_index])
 
-        # equivalent for brightness
-        brightness_x = [self.brightness_x[i] for i in range(self.all_particles_len) if particle_states[i] == True and i != particle_index]
-        brightness_y = [self.brightness_y[i] for i in range(self.all_particles_len) if particle_states[i] == True and i != particle_index]
+        # Initialize empty lists for brightness data
+        brightness_x = []
+        brightness_y = []
 
-        # selected area
+        # Add enabled brightness values except selected particle
+        for i in range(self.all_particles_len):
+            if particle_states[i] == True and i != particle_index:
+                try:
+                    brightness_x.append(self.brightness_x[i])
+                    brightness_y.append(self.brightness_y[i])
+                except IndexError:
+                    print("IndexError at particle", i," (brightness)")
+
+        # Add the selected particle brightness
         brightness_x.append(self.brightness_x[particle_index])
         brightness_y.append(self.brightness_y[particle_index])
 
@@ -226,12 +259,15 @@ class CellViewer:
             self.brightness_x.append(x)
             self.brightness_y.append(y)
 
+        # print("brightness_x length:", (len(self.brightness_x)))
         self.area_x = []
         self.area_y = []
         for p in self.all_particles:
             x,y = self.get_track_data(p, 'area')
             self.area_x.append(x)
             self.area_y.append(y)
+
+        # print("area_x length:", (len(self.area_x)))
 
         colors = [self.COLOR_GRAY] * len(self.all_particles)
         colors[len(self.all_particles)-1] = self.COLOR_RED
@@ -275,9 +311,15 @@ class CellViewer:
             self.frame_changed()
 
         self.brightness_plot = self.plotly_to_json(self.brightness_figure)
+
     # enable / disable current particle and save tracks to file
     def particle_enabled_changed(self):
-        self.all_tracks.loc[self.all_tracks['particle'] == self.particle, 'enabled'] = self.particle_enabled
+        if self.particle_enabled == True:
+            index_csv = 1
+        else:
+            index_csv = 0
+        # self.all_tracks.loc[self.all_tracks['particle'] == self.particle, 'enabled'] = self.particle_enabled
+        self.all_tracks.loc[self.all_tracks['particle'] == self.particle, 'enabled'] = index_csv
         self.all_tracks.to_csv(self.data_dir + '/tracks.csv')
         self.update_plots()
         self.draw_outlines()
@@ -511,83 +553,3 @@ class CellViewer:
 
     def handle_keyup(self, event):
         self.key_down[event['key']] = False
-
-    def show(self):
-        size = 400
-        #self.image = widgets.Image(width = '60%', height = '60%', format='jpg')
-        #self.image = widgets.Image(format='jpg', layout=widgets.Layout(width='100%', height='auto'))
-        self.image = widgets.Image(format='jpg', layout=widgets.Layout(width='50%', height='auto', object_fit='contain'))
-
-        # Plotting
-        self.brightness_figure = go.Figure()
-        self.brightness_figure.update_layout(title='Brightness')
-        self.brightness_lines = go.Scatter(x=[], y=[], mode='lines')
-        self.brightness_cursor_line = go.Scatter(x=[0,0], y=[0,1], mode='lines', line=dict(color=self.COLOR_RED))
-
-        self.area_figure = go.Figure()
-        self.area_figure.update_layout(title='Area')
-        self.area_lines = go.Scatter(x=[], y=[], mode='lines')
-        self.area_cursor_line = go.Scatter(x=[0,0], y=[0,1], mode='lines', line=dict(color=self.COLOR_RED))
-
-        controls_widgets = []
-
-        position_options = []
-        for pos in self.positions:
-            position_options.append((str(pos[0]), pos))
-            # Example: if self.positions is [(0, 'XY00'), (1, 'XY01')]
-            # then position_options = [('0', (0, 'XY00')), ('1', (1, 'XY01'))]
-            # position_options is a list of tuples, where the first element is a string and the second element is a tuple
-
-
-        self.position_dropdown = widgets.Dropdown(description='Position:')
-        self.max_value_slider = widgets.IntSlider(min=0, max=np.iinfo(np.uint16).max, description='Max Pixel Value (Contrast)', value=self.max_pixel_value)
-        #self.frame_slider = widgets.IntSlider(min=self.frame_min, max=self.frame_max, description='Frame', value=self.frame)
-        self.frame_slider = widgets.IntSlider(description='Frame', value=self.frame)
-        self.channel_slider = widgets.IntSlider(min=self.channel_min, max=self.channel_max, description='Channel', value=self.channel)
-        self.particle_dropdown = widgets.Dropdown()
-        self.enabled_checkbox = widgets.Checkbox(description='Cell Enabled')
-
-        self.position_dropdown.observe(self.position_dropdown_changed, names='value')
-        self.frame_slider.observe(self.frame_slider_changed, names='value')
-        self.channel_slider.observe(self.channel_slider_changed, names='value')
-        self.max_value_slider.observe(self.max_pixel_slider_changed, names='value')
-        self.particle_dropdown.observe(self.particle_dropdown_changed, names='value')
-        self.enabled_checkbox.observe(self.enabled_checkbox_changed, names='value')
-
-
-        self.position_dropdown.options = position_options
-
-        controls_widgets.append(self.position_dropdown)
-        controls_widgets.append(self.max_value_slider)
-        controls_widgets.append(self.frame_slider)
-        controls_widgets.append(self.channel_slider)
-        controls_widgets.append(self.particle_dropdown)
-        controls_widgets.append(self.enabled_checkbox)
-
-        controls_box = widgets.VBox(controls_widgets)
-
-        self.area_figure.update_layout(height=300)
-        self.brightness_figure.update_layout(height=300)
-        plots_box = widgets.VBox([self.area_figure,self.brightness_figure], layout=widgets.Layout(width='50%'))
-
-
-        #plots_box = widgets.VBox([self.area_figure,self.brightness_figure,controls_box], layout=widgets.Layout(width='50%', height='auto'))
-
-        #output_box = widgets.VBox([plots_box,widgets.HBox([self.image,controls_box])])
-        #output_box = widgets.VBox([widgets.HBox([self.image,plots_box]), controls_box])
-        #output_box = widgets.HBox([self.image,plots_box])
-
-
-        widgets.VBox([self.image,controls_box])
-        output_box = widgets.VBox([widgets.HBox([self.image,plots_box]),controls_box])
-
-        #output_box.layout.height = '90%'
-        #output_box = widgets.HBox([widgets.VBox([self.image,controls_box], layout=widgets.Layout(width='50%')), plots_box])
-
-        self.key_down = {}
-        keyup_event = Event(source=output_box, watched_events=['keyup'], prevent_default_action=True)
-        keyup_event.on_dom_event(self.handle_keyup)
-        keydown_event = Event(source=output_box, watched_events=['keydown'], prevent_default_action=True)
-        keydown_event.on_dom_event(self.handle_keydown)
-
-        display(output_box)

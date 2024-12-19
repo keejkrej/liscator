@@ -27,7 +27,8 @@ class App:
             if not nd2_path or not out_path:
                 return jsonify({'error': 'Both ND2 path and output path must be selected'}), 400
 
-            self.cell_viewer = CellViewer(nd2_path=nd2_path, output_path=out_path)
+            init_type = 'view' if redirect_to == 'view' else 'analysis'
+            self.cell_viewer = CellViewer(nd2_path=nd2_path, output_path=out_path, init_type=init_type)
             self.cell_viewer.nd2_path = nd2_path
             self.cell_viewer.output_path = out_path
 
@@ -51,18 +52,20 @@ class App:
                                    n_frames=self.cell_viewer.frame_max,
                                    all_particles_len=self.cell_viewer.all_particles_len,
                                    current_particle_index=current_particle_index,
-                                   brightness_plot=self.cell_viewer.brightness_plot)
+                                   brightness_plot=self.cell_viewer.brightness_plot,
+                                   disabled_particles=self.cell_viewer.disabled_particles)
 
         @self.app.route('/preprocess', methods=['GET', 'POST'])
         def processing():
             return render_template('preprocess.html')
+
 
         @self.app.route('/documentation', methods=['GET', 'POST'])
         def documentation():
             svg = "static/images/UserTutorial.svg"
             return render_template('documentation.html', svg=svg)
 
-        @self.app.route('/update_image', methods=['POST'])
+        @self.app.route('/update_image', methods=['GET', 'POST'])
         def update_image():
             new_position = int(request.form['position'])
             new_channel = int(request.form['channel'])
@@ -82,8 +85,29 @@ class App:
 
             self.cell_viewer.get_channel_image()
             self.cell_viewer.draw_outlines()
-            return jsonify({'channel_image': self.cell_viewer.return_image(),
-                            'brightness_plot': self.cell_viewer.brightness_plot})
+            return jsonify({
+                'channel_image': self.cell_viewer.return_image(),
+                'brightness_plot': self.cell_viewer.brightness_plot,
+                'all_particles_len': self.cell_viewer.all_particles_len,
+                'particle_enabled': self.cell_viewer.particle_enabled,
+                'current_particle': self.cell_viewer.particle,
+                'disabled_particles': self.cell_viewer.disabled_particles
+            })
+
+        @self.app.route('/update_particle_enabled', methods=['POST'])
+        def update_particle_enabled():
+            data = request.json
+            enabled = data['enabled']
+            if self.cell_viewer:
+                self.cell_viewer.particle_enabled = enabled
+                self.cell_viewer.particle_enabled_changed()
+                return jsonify({
+                    'channel_image': self.cell_viewer.return_image(),
+                    'brightness_plot': self.cell_viewer.brightness_plot,
+                    'all_particles_len': self.cell_viewer.all_particles_len,
+                    'disabled_particles': self.cell_viewer.disabled_particles
+                })
+            return jsonify({'error': 'Cell viewer not initialized'}), 400
 
         @self.app.route('/do_segmentation', methods=['POST'])
         def do_segmentation():
@@ -132,8 +156,9 @@ class App:
         def analysis():
             if self.cell_viewer is None:
                 return redirect(url_for('index'))
+            n_positions = len(self.cell_viewer.nd2.metadata['fields_of_view'])+1
             return render_template('analysis.html',
-                                   n_positions=len(self.cell_viewer.positions),
+                                   n_positions=n_positions,
                                    n_channels=self.cell_viewer.channel_max,
                                    n_frames=self.cell_viewer.frame_max)
 

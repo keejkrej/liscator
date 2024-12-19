@@ -1,9 +1,17 @@
+// ui.js
+/**
+ * ui.js
+ * Handles the user interface elements initialization and event listeners
+ * for sliders and dropdown menus in the application.
+ */
+
 // Get the sliders
 const positionSlider = document.getElementById("position_slider");
 const channelSlider = document.getElementById("channel_slider");
 const timeframeSlider = document.getElementById("timeframe_slider");
 const particleSlider = document.getElementById("particle_slider");
 
+// Initialize sliders and their value displays when DOM is loaded
 document.addEventListener("DOMContentLoaded", (event) => {
   let sliders = ["position", "channel", "timeframe", "particle"];
   sliders.forEach((slider) => {
@@ -11,16 +19,18 @@ document.addEventListener("DOMContentLoaded", (event) => {
     let sliderValue = document.getElementById(`${slider}_value`);
     let n_values = parseInt(sliderElement.max) + 1;
 
+    // Update the display value when slider changes
     sliderElement.addEventListener("input", function () {
       sliderValue.innerHTML = `${sliderElement.value}/${n_values - 1}`;
     });
   });
 });
 
-// Get the dropdown menus
+// Get the dropdown menus and set up logging for debugging
 const dropdown1 = document.getElementById("dropdown1");
 const dropdown2 = document.getElementById("dropdown2");
-// Add event listeners
+
+// Add event listeners for logging slider and dropdown changes
 positionSlider.addEventListener("input", function () {
   console.log("Position: ", positionSlider.value);
 });
