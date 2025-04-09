@@ -9,7 +9,8 @@ import pandas as pd
 import re
 import math
 
-import matplotlib.pyplot as plt
+
+# import matplotlib.pyplot as plt
 
 import pathlib
 
@@ -164,7 +165,7 @@ def csv_output_position(pos: int, pos_path: pathlib.Path, mins: float, use_squar
             area = csv_get_table(particles,tracks,frames,mins,'square_area')
         else:
             area = csv_get_table(particles,tracks,frames,mins,'area')
-        area.to_excel(writer, sheet_name='Area')
+        area.to_excel(writer, sheet_name='Area', index=False)
 
         for i in range(len(fl_channel_names)):
             col_name = 'brightness_' + str(i)
@@ -172,12 +173,11 @@ def csv_output_position(pos: int, pos_path: pathlib.Path, mins: float, use_squar
                 brightness = csv_get_table(particles,tracks,frames,mins,'square_' + col_name)
             else:
                 brightness = csv_get_table(particles,tracks,frames,mins,col_name)
-            brightness.to_excel(writer, sheet_name=fl_channel_names[i])
+            brightness.to_excel(writer, sheet_name=fl_channel_names[i], index=False)
 
             table_to_image(pos_path,particles,brightness,fl_channel_names[i])
 
     print('Done')
-
 
 def table_to_image(pos_path: pathlib.Path, particles: list, table: pd.DataFrame, name: str) -> None:
     """
@@ -190,24 +190,27 @@ def table_to_image(pos_path: pathlib.Path, particles: list, table: pd.DataFrame,
     particles (list): List of particle IDs
     table (pd.DataFrame): Data table
     name (str): Name for the output file
-
-    Returns:
-    None
     """
-    plt.ioff()
+    # Import matplotlib and set backend at the start of the function
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+
+    # Create figure without displaying it
     fig = plt.figure()
 
     for p in particles:
-        plt.plot(table['time'].values,table[str(p)].values, color='gray', alpha=0.5)
+        plt.plot(table['time'].values, table[str(p)].values, color='gray', alpha=0.5)
 
     plt.xlabel('Time (Frame)')
     plt.ylabel('Brightness (Pixelsum)')
     plt.title(name)
     plt.tight_layout()
 
+    # Save figure and close it
     fig.savefig(pos_path.joinpath(name + '.png').absolute())
+    plt.close(fig)
 
-    plt.ion()
 
 def csv_get_table(particles: list, tracks: pd.DataFrame, frames: list, mins: float, col: str) -> pd.DataFrame:
     """
@@ -262,6 +265,7 @@ def square_roi(out_dir: str, pos: list, micron_size: float) -> None:
     None
     """
     folders = get_tracked_folders(out_dir,pos)
+    print(folders)
     for folder in folders:
         square_roi_position(folder[0],folder[1],micron_size)
 
@@ -294,9 +298,25 @@ def square_roi_position(pos: int, pos_path: pathlib.Path, micron_size: float) ->
         frame_data_index = frame-data.attrs['frame_min']
         print("Frame",str(int(frame)))
 
-        t = tracks[(tracks['frame'] == frame) & (tracks['enabled'] == True)]
+        # t = tracks[(tracks['frame'] == frame) & (tracks['enabled'] == True)]
+        true_values = [1, '1', '1.0', 1.0, True, 'True', 'true', 'TRUE']
+
+        # Convert true_values to lowercase strings
+        true_values_lower = [str(v).lower() for v in true_values]
+
+        # Create the enabled condition:
+        # 1. Convert the enabled column to string
+        # 2. Convert all values to lowercase
+        # 3. Check if they're in our true_values list
+        enabled_condition = tracks['enabled'].astype(str).str.lower().isin(true_values_lower)
+
+        # Apply both conditions to filter the dataframe
+        t = tracks[
+            (tracks['frame'] == frame) & (enabled_condition)]
+
 
         for index, record in t.iterrows():
+
             x = int((record['bbox_x1'] + record['bbox_x2']) // 2)
             y = int((record['bbox_y1'] + record['bbox_y2']) // 2)
 
@@ -308,6 +328,7 @@ def square_roi_position(pos: int, pos_path: pathlib.Path, micron_size: float) ->
 
             tracks.loc[(tracks['frame'] == frame) & (tracks['particle'] == record['particle']), 'square_area'] = (x2-x1) * (y2-y1)
             for i in range(len(data.attrs['fl_channels'])):
+
                 im_slice = data['fluorescence'][int(frame_data_index),i][x1:x2,y1:y2]
                 tracks.loc[(tracks['frame'] == frame) & (tracks['particle'] == record['particle']), 'square_brightness_' + str(i)] = im_slice.sum()
 
@@ -613,12 +634,14 @@ def track_position_pyama(pos: int, pos_path: pathlib.Path, expand: int) -> None:
         if len(track) < min_track_length:
             continue
 
-        particle_id += 1
+
 
         for row in track:
             row['particle'] = particle_id
             row['enabled'] = True
             result_data.append(row)
+
+        particle_id += 1
 
     tracks = pd.DataFrame(result_data)
 
@@ -713,7 +736,7 @@ def segment_positions(nd2_path: str, out_dir: str, pos: list, seg_channel: int, 
         return
 
     fl_channel_names = [nd2.metadata['channels'][c] for c in fl_channels]
-        
+
     try:
         # Check and calculate padding
         max_field = max(nd2.metadata['fields_of_view'])
@@ -722,16 +745,16 @@ def segment_positions(nd2_path: str, out_dir: str, pos: list, seg_channel: int, 
         else:
             # Save metadata to a text file
             with open("metadata_output.txt", "w") as file:
-                file.write(str(nd2.metadata))    
-            
+                file.write(str(nd2.metadata))
+
             print("Warning: fields_of_view contains zero or negative values.")
             padding = 0  # or any default you prefer
     except KeyError:
         print("Error: 'fields_of_view' key not found in metadata.")
         padding = 0  # or any default you prefer
-    
 
-    
+
+
     frames = list(nd2.metadata['frames'])
 
     if frame_min is not None:

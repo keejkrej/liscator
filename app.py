@@ -44,7 +44,7 @@ class App:
             if self.cell_viewer is None:
                 return redirect(url_for('index'))
             self.cell_viewer.position_changed()
-            current_particle_index = self.cell_viewer.all_particles.index(self.cell_viewer.particle)
+            current_particle_index = self.cell_viewer.particle_index()
             return render_template('view.html',
                                    channel_image=self.cell_viewer.return_image(),
                                    n_positions=len(self.cell_viewer.positions),
@@ -58,7 +58,6 @@ class App:
         @self.app.route('/preprocess', methods=['GET', 'POST'])
         def processing():
             return render_template('preprocess.html')
-
 
         @self.app.route('/documentation', methods=['GET', 'POST'])
         def documentation():
@@ -151,6 +150,19 @@ class App:
 
             pyama_util.square_roi(out_dir, positions, square_um_size)
             return jsonify({'status': 'success'})
+
+        @self.app.route('/do_export', methods=['POST'])
+        def do_export():
+            data = request.json
+            out_dir = self.cell_viewer.output_path
+            positions = list(range(data['position_min'], data['position_max'] + 1))
+            minutes = data['minutes']
+
+            try:
+                pyama_util.csv_output(out_dir, positions, minutes)
+                return jsonify({'status': 'success'})
+            except Exception as e:
+                return jsonify({'status': 'error', 'message': str(e)}), 400
 
         @self.app.route('/analysis')
         def analysis():
