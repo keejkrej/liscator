@@ -49,7 +49,7 @@ This guide provides steps to set up and run the Flask application on a remote se
 6. Clone the project repository (if applicable) or copy your project files to this directory:
 
    ```
-   git clone [repository_url]
+   git clone https://gitlab.physik.uni-muenchen.de/LDAP_ls-raedler/Flask-LISCA.git .
    ```
 
 7. Install the required packages:
