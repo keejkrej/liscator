@@ -1,0 +1,134 @@
+{% extends "base/layout.html" %}
+{% load static %}
+{% load analysis_tags %}
+
+{% block styles %}
+<title>LISCA: Analysis</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        height: 100vh;
+        background-color: #ffffff;
+    }
+
+    .container {
+        text-align: center;
+    }
+
+    .controls {
+        margin-top: 20px;
+        max-width: 300px;
+        width: auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding-left: 10px;
+    }
+
+    .control-group {
+        margin-bottom: 15px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    select {
+        width: 100%;
+        padding: 5px;
+    }
+
+    .button-group {
+        display: flex;
+        flex-direction: column;
+        width: 90vw;
+        max-width: inherit;
+    }
+    .button {
+        flex-grow: 1;
+        justify-content: center;
+        text-align: center;
+        background-color: rgb(227, 98, 98);
+        margin: 3px;
+        padding: 10px;
+        max-width: inherit;
+    }
+
+    .range-label {
+        font-weight: bold;
+        margin-bottom: 5px;
+        display: block;
+    }
+
+    .stepper-pair {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+
+    .stepper {
+        display: flex;
+        align-items: center;
+        width: 48%;
+    }
+
+    .stepper label {
+        margin-right: 10px;
+        white-space: nowrap;
+    }
+
+    .stepper input[type="number"] {
+        width: 60px;
+        padding: 5px;
+    }
+
+    .channel-selection {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 15px;
+    }
+
+    .channel-dropdown {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 5px;
+    }
+
+    .channel-dropdown label {
+        margin-right: 10px;
+        white-space: nowrap;
+    }
+
+    .channel-dropdown select {
+        width: 120px;
+        padding: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<body>
+    <div class="container">
+        <h1>LISCA: Analysis</h1>
+        <div class="controls">
+            {% analysis_controls n_channels=n_channels n_positions=n_positions n_frames=n_frames %}
+        </div>
+    </div>
+</body>
+
+<script src="{% static 'api.js' %}"></script>
+
+{% analysis_scripts n_channels=n_channels n_positions=n_positions n_frames=n_frames %}
+
+{% endblock %}

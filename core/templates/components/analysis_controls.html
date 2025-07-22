@@ -1,0 +1,104 @@
+<div class="control-group">
+    <label class="range-label">Channel selection</label>
+    <div class="channel-selection">
+        {% for i in "0123456789"|make_list %}
+            {% if i|add:0 <= n_channels %}
+            <div class="channel-dropdown">
+                <label for="channel_{{ i }}">{{ i }} Channel:</label>
+                <select id="channel_{{ i }}" name="channel_{{ i }}">
+                    <option value="Brightfield">Brightfield</option>
+                    <option value="Fluorescent">Fluorescent</option>
+                    <option value="Not Used">Not Used</option>
+                </select>
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+<div class="control-group">
+    <label class="range-label">Position range</label>
+    <div class="stepper-pair">
+        <div class="stepper">
+            <label for="position_min">Min:</label>
+            <input
+                type="number"
+                id="position_min"
+                name="position_min"
+                min="0"
+                max="{{ n_positions|add:'-1' }}"
+                value="0"
+            />
+        </div>
+        <div class="stepper">
+            <label for="position_max">Max:</label>
+            <input
+                type="number"
+                id="position_max"
+                name="position_max"
+                min="0"
+                max="{{ n_positions|add:'-1' }}"
+                value="{{ n_positions|add:'-1' }}"
+            />
+        </div>
+    </div>
+</div>
+<div class="control-group">
+    <label class="range-label">Frame range</label>
+    <div class="stepper-pair">
+        <div class="stepper">
+            <label for="frame_min">Min:</label>
+            <input
+                type="number"
+                id="frame_min"
+                name="frame_min"
+                min="0"
+                max="{{ n_frames }}"
+                value="0"
+            />
+        </div>
+        <div class="stepper">
+            <label for="frame_max">Max:</label>
+            <input
+                type="number"
+                id="frame_max"
+                name="frame_max"
+                min="0"
+                max="{{ n_frames }}"
+                value="{{ n_frames }}"
+            />
+        </div>
+    </div>
+</div>
+<div class="control-group">
+    <label for="expand_labels">Expand Labels:</label>
+    <input type="checkbox" id="expand_labels" name="expand_labels" checked />
+</div>
+<div class="control-group">
+    <label for="square_size">Square Size (μm):</label>
+    <input
+        type="number"
+        id="square_size"
+        name="square_size"
+        min="1"
+        value="30"
+    />
+</div>
+<div class="control-group">
+    <label for="minutes">Minutes per frame:</label>
+    <input
+        type="number"
+        id="minutes"
+        name="minutes"
+        min="1"
+        step="1"
+        value="1.0"
+    />
+</div>
+<div class="button-group">
+    <button class="button" id="do_segmentation">Do Segmentation</button>
+    <button class="button" id="do_tracking">Do Tracking</button>
+    <button class="button" id="do_square_rois">
+        Do Square ROIs for Position(s)
+    </button>
+    <button class="button" id="export">Export Output</button>
+</div>

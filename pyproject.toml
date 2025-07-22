@@ -1,0 +1,9 @@
+[project]
+name = "liscator"
+version = "0.1.0"
+description = "Web LISCA (Pyama) - Cell image analysis tool"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "django>=5.2.4",
+]

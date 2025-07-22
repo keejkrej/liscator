@@ -1,107 +1,3 @@
-{% macro analysis_controls(n_channels, n_positions, n_frames) %}
-<div class="control-group">
-    <label class="range-label">Channel selection</label>
-    <div class="channel-selection">
-        {% for i in range(n_channels + 1) %}
-        <div class="channel-dropdown">
-            <label for="channel_{{ i }}">{{ i }} Channel:</label>
-            <select id="channel_{{ i }}" name="channel_{{ i }}">
-                <option value="Brightfield">Brightfield</option>
-                <option value="Fluorescent">Fluorescent</option>
-                <option value="Not Used">Not Used</option>
-            </select>
-        </div>
-        {% endfor %}
-    </div>
-</div>
-<div class="control-group">
-    <label class="range-label">Position range</label>
-    <div class="stepper-pair">
-        <div class="stepper">
-            <label for="position_min">Min:</label>
-            <input
-                type="number"
-                id="position_min"
-                name="position_min"
-                min="0"
-                max="{{ n_positions - 1 }}"
-                value="0"
-            />
-        </div>
-        <div class="stepper">
-            <label for="position_max">Max:</label>
-            <input
-                type="number"
-                id="position_max"
-                name="position_max"
-                min="0"
-                max="{{ n_positions - 1 }}"
-                value="{{ n_positions - 1 }}"
-            />
-        </div>
-    </div>
-</div>
-<div class="control-group">
-    <label class="range-label">Frame range</label>
-    <div class="stepper-pair">
-        <div class="stepper">
-            <label for="frame_min">Min:</label>
-            <input
-                type="number"
-                id="frame_min"
-                name="frame_min"
-                min="0"
-                max="{{ n_frames }}"
-                value="0"
-            />
-        </div>
-        <div class="stepper">
-            <label for="frame_max">Max:</label>
-            <input
-                type="number"
-                id="frame_max"
-                name="frame_max"
-                min="0"
-                max="{{ n_frames }}"
-                value="{{ n_frames }}"
-            />
-        </div>
-    </div>
-</div>
-<div class="control-group">
-    <label for="expand_labels">Expand Labels:</label>
-    <input type="checkbox" id="expand_labels" name="expand_labels" checked />
-</div>
-<div class="control-group">
-    <label for="square_size">Square Size (μm):</label>
-    <input
-        type="number"
-        id="square_size"
-        name="square_size"
-        min="1"
-        value="30"
-    />
-</div>
-<div class="control-group">
-    <label for="minutes">Minutes per frame:</label>
-    <input
-        type="number"
-        id="minutes"
-        name="minutes"
-        min="1"
-        step="1"
-        value="1.0"
-    />
-</div>
-<div class="button-group">
-    <button class="button" id="do_segmentation">Do Segmentation</button>
-    <button class="button" id="do_tracking">Do Tracking</button>
-    <button class="button" id="do_square_rois">
-        Do Square ROIs for Position(s)
-    </button>
-    <button class="button" id="export">Export Output</button>
-</div>
-{% endmacro %} {% macro analysis_scripts(n_channels, n_positions, n_frames) %}
 <script>
     document.getElementById('do_segmentation').addEventListener('click', function() {
         const data = {
@@ -115,7 +11,7 @@
             data[`channel_${i}`] = document.getElementById(`channel_${i}`).value;
         }
 
-        fetch('/do_segmentation', {
+        fetch('/do_segmentation/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -138,7 +34,7 @@
             expand_labels: document.getElementById('expand_labels').checked,
         };
 
-        fetch('/do_tracking', {
+        fetch('/do_tracking/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -161,7 +57,7 @@
             square_size: parseInt(document.getElementById('square_size').value),
         };
 
-        fetch('/do_square_rois', {
+        fetch('/do_square_rois/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -184,7 +80,7 @@
             minutes: parseFloat(document.getElementById('minutes').value)
         };
 
-        fetch('/do_export', {
+        fetch('/do_export/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -204,4 +100,3 @@
         });
     });
 </script>
-{% endmacro %}
